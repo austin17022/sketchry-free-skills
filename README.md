@@ -20,24 +20,22 @@ Free Claude Code / Codex / Cursor Skills that build finished websites, pitch dec
 ### npx skills
 
 ```bash
-npx skills add OWNER/sketchry-free-skills
+npx skills add austin17022/sketchry-free-skills
 # or a single skill:
-npx skills add OWNER/sketchry-free-skills --skill pitchfold
+npx skills add austin17022/sketchry-free-skills --skill pitchfold
 ```
-
-> Replace `OWNER` with the GitHub username or org that hosts this repo.
 
 ### Claude Code plugin
 
 ```
-/plugin marketplace add OWNER/sketchry-free-skills
+/plugin marketplace add austin17022/sketchry-free-skills
 /plugin install sketchry-free-skills@sketchry
 ```
 
 ### Manual
 
 ```bash
-git clone <repo-url> sketchry-free-skills
+git clone https://github.com/austin17022/sketchry-free-skills.git
 cp -r sketchry-free-skills/skills/pitchfold ~/.claude/skills/
 # or into a project: cp -r sketchry-free-skills/skills/pitchfold .claude/skills/
 ```
@@ -71,7 +69,7 @@ Sketchry 免費 Skills：8 個可以直接用在 Claude Code、Codex 或 Cursor 
 安裝方式：
 
 ```bash
-npx skills add OWNER/sketchry-free-skills
+npx skills add austin17022/sketchry-free-skills
 ```
 
 或手動複製到 `~/.claude/skills/`：
