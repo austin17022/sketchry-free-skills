@@ -1,0 +1,22 @@
+{
+  "lead": 0.5,
+  "tail": 1.5,
+  "steps": [
+    { "eval": "__play()" },
+    { "wait": 1500 },
+    { "click": "#send", "ms": 900, "after": 200 },
+    { "move": [1210, 760], "ms": 1400 },
+    { "wait": 6200 },
+    { "click": ".ph[data-i='3']", "ms": 800, "after": 800 },
+    { "click": { "frame": ".ph[data-i='3'] iframe", "sel": "#pause" }, "ms": 900, "after": 1100 },
+    { "click": { "frame": ".ph[data-i='3'] iframe", "sel": "#pause" }, "ms": 300, "after": 900 },
+    { "click": ".ph[data-i='0']", "ms": 1000, "after": 300 },
+    { "click": ".ph[data-i='1']", "ms": 500, "after": 800 },
+    { "scroll": 340, "at": { "frame": ".ph[data-i='1'] iframe", "sel": ".stubs" }, "ms": 900, "moveMs": 800 },
+    { "wait": 700 },
+    { "scroll": -340, "ms": 800 },
+    { "click": ".ph[data-i='2']", "ms": 800, "after": 800 },
+    { "move": "#score", "ms": 1100 },
+    { "wait": 1200 }
+  ]
+}

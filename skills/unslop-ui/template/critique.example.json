@@ -1,0 +1,21 @@
+{
+  "lang": "en",
+  "app": "Running app",
+  "prompt": "Design a running app for office workers who want to build a habit",
+  "concept": "a race bib",
+  "before": "before",
+  "final": ["home", "run", "log"],
+  "directions": [
+    { "name": "Race bib", "line": "Huge number, pin holes, a tear-off stub", "screen": "home", "picked": true },
+    { "name": "Track lane", "line": "Red clay track, today you run lane 5", "screen": "track" },
+    { "name": "Morning paper", "line": "Each day's plan is a front page", "screen": "paper" }
+  ],
+  "board": ["paper", "log", "home", "run", "track"],
+  "questions": [
+    { "key": "Concept", "score": 9, "why": "Big number, red top band and pin holes: anyone who has run a race recognises it" },
+    { "key": "Memorable", "score": 9, "why": "The giant 05 on the home screen; every finished run becomes a torn-off stub" },
+    { "key": "Difference", "score": 10, "why": "Next to the first AI draft, colour, type and layout skeleton are all different" },
+    { "key": "Material", "score": 5, "why": "The paper shader makes the bib feel like Tyvek, but it is subtle and the screen still works without it" },
+    { "key": "Readability", "score": 9, "why": "The big numbers read instantly; secondary text is grey with enough contrast" }
+  ]
+}

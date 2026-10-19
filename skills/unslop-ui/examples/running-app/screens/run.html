@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>跑步中</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bib.css">
+<style>
+  html, body { background: #121212; color: #f4f2ec; }
+  .head { display: flex; justify-content: space-between; align-items: center; padding: 72px 24px 0; }
+  .head .n { font-size: 22px; color: #f4f2ec; }
+  .live { font-size: 13px; font-weight: 700; letter-spacing: .12em; color: #a9a59c; display: flex; align-items: center; gap: 8px; }
+  .live i { width: 8px; height: 8px; border-radius: 50%; background: var(--red); animation: blink 1.2s infinite; }
+  .paused .live i { animation: none; opacity: .3; }
+  @keyframes blink { 50% { opacity: .25; } }
+  .dist { padding: 34px 20px 0 22px; display: flex; align-items: flex-end; gap: 8px; }
+  .dist b { font-size: 196px; line-height: .78; letter-spacing: -.05em; }
+  .dist span { font-size: 24px; color: #a9a59c; padding-bottom: 6px; }
+  .goal { padding: 16px 24px 0; font-size: 15px; color: #a9a59c; }
+  /* 路線＝一條賽道，五個公里標 */
+  .course { position: relative; margin: 34px 24px 0; height: 44px; }
+  .course::before { content: ""; position: absolute; left: 0; right: 0; top: 10px; height: 2px; background: #3a3936; }
+  .course .done { position: absolute; left: 0; top: 10px; height: 2px; background: var(--red); transition: width .9s linear; }
+  .course .me { position: absolute; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 5px #e4412b33; transform: translateX(-50%); transition: left .9s linear; }
+  .course .km { position: absolute; top: 24px; font-size: 12px; color: #77736a; transform: translateX(-50%); }
+  .course .km::before { content: ""; position: absolute; left: 50%; top: -18px; width: 2px; height: 8px; background: #3a3936; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; margin: 30px 24px 0; border-top: 1px solid #2c2b29; }
+  .stats div { padding: 16px 0; border-bottom: 1px solid #2c2b29; }
+  .stats div:nth-child(odd) { border-right: 1px solid #2c2b29; }
+  .stats div:nth-child(even) { padding-left: 20px; }
+  .stats dt { font-size: 12px; color: #77736a; letter-spacing: .1em; }
+  .stats dd { font-size: 44px; line-height: 1.05; margin-top: 4px; }
+  .btns { position: absolute; left: 20px; right: 20px; bottom: 44px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .btns button { height: 62px; border-radius: 16px; font-size: 18px; font-weight: 700; letter-spacing: .1em; transition: transform .1s; }
+  .btns button:active { transform: scale(.97); }
+  #pause { background: #f4f2ec; color: #121212; }
+  #end { border: 1.5px solid #4a4945; }
+</style>
+</head>
+<body data-bar="light">
+<script src="ios.js" defer></script>
+  <header class="head"><span class="n">No.0023</span><span class="live"><i></i>晨跑・GPS</span></header>
+  <div class="dist"><b class="n" id="d">2.84</b><span class="n">KM</span></div>
+  <p class="goal">目標 5.0 公里，還剩 <b id="left">2.16</b></p>
+  <div class="course" id="course">
+    <i class="done" id="done"></i><i class="me" id="me"></i>
+  </div>
+  <dl class="stats">
+    <div><dt>時間</dt><dd class="n" id="t">17:42</dd></div>
+    <div><dt>配速 / KM</dt><dd class="n">6'14"</dd></div>
+    <div><dt>心率</dt><dd class="n" id="hr">142</dd></div>
+    <div><dt>大卡</dt><dd class="n" id="kcal">196</dd></div>
+  </dl>
+  <div class="btns"><button id="pause">暫停</button><button id="end">結束</button></div>
+<script type="module">
+  import './fx.js';
+  const $ = id => document.getElementById(id);
+  const course = $('course');
+  for (let k = 0; k <= 5; k++) { const m = document.createElement('span'); m.className = 'km n'; m.style.left = k * 20 + '%'; m.textContent = k === 0 ? '起點' : k; course.append(m); }
+  // 錄影時跑快一點：每秒前進 0.02 公里（真實約 0.0027）
+  let d = 2.84, sec = 17 * 60 + 42, running = true;
+  function draw() {
+    $('d').textContent = d.toFixed(2);
+    $('left').textContent = Math.max(0, 5 - d).toFixed(2);
+    $('t').textContent = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+    $('done').style.width = (d / 5) * 100 + '%';
+    $('me').style.left = (d / 5) * 100 + '%';
+    $('kcal').textContent = Math.round(d * 69);
+  }
+  setInterval(() => { if (!running || d >= 5) return; d += 0.02; sec += 1; $('hr').textContent = 140 + Math.round(Math.random() * 5); draw(); }, 1000);
+  $('pause').addEventListener('click', () => { running = !running; $('pause').textContent = running ? '暫停' : '繼續'; document.body.classList.toggle('paused', !running); });
+  draw();
+</script>
+</body>
+</html>

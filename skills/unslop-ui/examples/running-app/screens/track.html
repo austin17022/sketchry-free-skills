@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>方向 B 田徑跑道</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  /* 方向 B：田徑場的紅土跑道，畫面就是第 5 道 */
+  * { box-sizing: border-box; margin: 0; }
+  html, body { background: #b9503a; color: #fbf3ea; font-family: "Noto Sans TC", sans-serif; height: 852px; overflow: hidden; position: relative; }
+  .n { font-family: Archivo, sans-serif; font-stretch: 62%; font-weight: 900; }
+  svg.lanes { position: absolute; inset: 0; }
+  .lane { position: absolute; left: 150px; top: 250px; font-size: 360px; line-height: 1; color: #fbf3ea; letter-spacing: -.04em; }
+  .txt { position: absolute; left: 26px; top: 92px; }
+  .txt p { font-size: 15px; letter-spacing: .14em; opacity: .85; }
+  .txt h1 { font-size: 40px; font-weight: 900; line-height: 1.15; margin-top: 8px; }
+  .go { position: absolute; left: 20px; right: 20px; bottom: 44px; height: 62px; border: 0; border-radius: 16px; background: #fbf3ea; color: #7a2a1b; font: 700 18px "Noto Sans TC"; letter-spacing: .1em; }
+</style>
+</head>
+<body data-bar="light">
+<script src="ios.js" defer></script>
+  <svg class="lanes" viewBox="0 0 393 852" preserveAspectRatio="none" aria-hidden="true">
+    <g fill="none" stroke="#fbf3ea" stroke-width="2.5" opacity=".85">
+      <path d="M-40 852 C 60 560, 380 520, 470 300"/><path d="M10 852 C 110 580, 400 560, 470 380"/>
+      <path d="M60 852 C 160 600, 410 600, 470 460"/><path d="M110 852 C 210 620, 420 640, 470 540"/>
+      <path d="M160 852 C 260 640, 430 680, 470 620"/>
+    </g>
+  </svg>
+  <div class="txt"><p>第 5 道・400 公尺</p><h1>今天 5 公里<br>＝ 12.5 圈</h1></div>
+  <b class="lane n">5</b>
+  <button class="go">上跑道</button>
+</body>
+</html>

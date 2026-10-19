@@ -1,0 +1,64 @@
+{
+  "lang": "zh",
+  "app": "跑步 App",
+  "prompt": "幫我設計一個跑步 App，給想養成習慣的上班族",
+  "concept": "路跑號碼布",
+  "before": "before",
+  "final": [
+    "home",
+    "run",
+    "log"
+  ],
+  "directions": [
+    {
+      "name": "號碼布",
+      "line": "大號碼、別針孔、可撕存根",
+      "screen": "home",
+      "picked": true
+    },
+    {
+      "name": "田徑跑道",
+      "line": "紅土跑道，今天跑第 5 道",
+      "screen": "track"
+    },
+    {
+      "name": "晨跑日報",
+      "line": "每天的計畫是一份頭版",
+      "screen": "paper"
+    }
+  ],
+  "board": [
+    "paper",
+    "log",
+    "home",
+    "run",
+    "track"
+  ],
+  "questions": [
+    {
+      "key": "概念辨識",
+      "score": 9,
+      "why": "大號碼、紅色頂帶、別針孔，跑過路跑的人一眼認得"
+    },
+    {
+      "key": "記憶點",
+      "score": 9,
+      "why": "首頁那個 05 和撕下來的存根，記錄頁每一次跑步都是一張存根"
+    },
+    {
+      "key": "前後差異",
+      "score": 10,
+      "why": "跟 AI 第一版並排，配色、字體、版面骨架全部不同"
+    },
+    {
+      "key": "材質必要性",
+      "score": 5,
+      "why": "紙纖維 shader 讓號碼布像真的紙，但效果偏淡，拿掉之後差別不大"
+    },
+    {
+      "key": "可讀性",
+      "score": 9,
+      "why": "大數字很清楚；次要資訊用灰字，對比足夠"
+    }
+  ]
+}

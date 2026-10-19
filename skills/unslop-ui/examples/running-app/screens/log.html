@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>本週的存根</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bib.css">
+<style>
+  .head { padding: 72px 24px 0; }
+  .total { display: flex; align-items: flex-end; gap: 8px; margin-top: 8px; }
+  .total b { font-size: 128px; line-height: .8; letter-spacing: -.04em; }
+  .total span { font-size: 22px; padding-bottom: 4px; }
+  .togo { margin-top: 12px; font-size: 15px; color: var(--mute); }
+  .togo b { color: var(--ink); }
+  .meter { display: grid; grid-template-columns: repeat(20, 1fr); gap: 3px; margin: 16px 24px 26px; }
+  .meter i { height: 18px; background: var(--line); }
+  .meter i.on { background: var(--ink); }
+  .meter i.today { background: var(--red); }
+  /* 每跑完一次，留下一張撕下來的存根 */
+  .stubs { padding: 0 18px 40px; display: grid; gap: 10px; }
+  .stub { position: relative; display: grid; grid-template-columns: 62px 1fr auto; align-items: center; gap: 14px; padding: 16px 20px 16px 18px; background: var(--sheet); box-shadow: 0 1px 0 #0000000d, 0 10px 24px -16px #3a2f1a40; transition: transform .2s; }
+  .stub::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px dashed #d6d1c5; }
+  .stub:hover { transform: translateX(4px); }
+  .stub .day { text-align: center; }
+  .stub .day b { display: block; font-size: 30px; line-height: 1; }
+  .stub .day span { font-size: 12px; color: var(--mute); }
+  .stub h3 { font-size: 15px; font-weight: 700; }
+  .stub p { font-size: 13px; color: var(--mute); margin-top: 3px; }
+  .stub .km { font-size: 38px; }
+  .stub .stamp { position: absolute; right: 74px; top: 50%; transform: translateY(-50%) rotate(-12deg); border: 2px solid var(--red); color: var(--red); font-size: 12px; font-weight: 900; padding: 2px 6px; letter-spacing: .1em; opacity: .85; }
+</style>
+</head>
+<body>
+<script src="ios.js" defer></script>
+  <header class="head">
+    <p class="cap">本週 10.02 到 10.08</p>
+    <div class="total"><b class="n">18.4</b><span class="n">KM</span></div>
+    <p class="togo">目標 20 公里，還差 <b>1.6</b></p>
+  </header>
+  <div class="meter" id="meter"></div>
+  <section class="stubs">
+    <article class="stub"><div class="day"><b class="n">08</b><span>三</span></div><div><h3>晨跑・大安森林</h3><p>6'18"／km　31 分</p></div><b class="km n">5.0</b><span class="stamp">今天</span></article>
+    <article class="stub"><div class="day"><b class="n">07</b><span>二</span></div><div><h3>夜跑・河濱</h3><p>6'02"／km　37 分</p></div><b class="km n">6.2</b></article>
+    <article class="stub"><div class="day"><b class="n">05</b><span>日</span></div><div><h3>間歇・田徑場</h3><p>5'31"／km　17 分</p></div><b class="km n">3.0</b></article>
+    <article class="stub"><div class="day"><b class="n">04</b><span>六</span></div><div><h3>晨跑・大安森林</h3><p>6'25"／km　27 分</p></div><b class="km n">4.2</b></article>
+  </section>
+<script type="module">
+  import './fx.js';
+  // 20 格＝20 公里：已跑的塗黑，今天這 5 公里塗紅
+  const m = document.getElementById('meter');
+  for (let i = 0; i < 20; i++) { const c = document.createElement('i'); if (i < 13) c.className = 'on'; else if (i < 18) c.className = 'today'; m.append(c); }
+</script>
+</body>
+</html>

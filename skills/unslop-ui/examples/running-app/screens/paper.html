@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>方向 C 晨跑日報</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;900&family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+  /* 方向 C：早報。每天的跑步計畫是一份頭版 */
+  * { box-sizing: border-box; margin: 0; }
+  html, body { background: #efe9dc; color: #1d1a16; font-family: "Noto Serif TC", serif; min-height: 852px; position: relative; }
+  .wrap { padding: 66px 22px 0; }
+  .mast { text-align: center; border-bottom: 3px double #1d1a16; padding-bottom: 8px; }
+  .mast h1 { font-size: 46px; font-weight: 900; letter-spacing: .12em; }
+  .meta { display: flex; justify-content: space-between; font-size: 12px; padding: 6px 0; border-bottom: 1px solid #1d1a16; font-family: Archivo, sans-serif; letter-spacing: .08em; }
+  h2 { font-size: 31px; font-weight: 900; line-height: 1.25; margin: 18px 0 12px; }
+  .cols { columns: 2; column-gap: 18px; column-rule: 1px solid #1d1a1640; font-size: 14px; line-height: 1.75; text-align: justify; }
+  .map { margin: 16px 0 0; height: 150px; border: 1px solid #1d1a16; background: repeating-linear-gradient(45deg, #1d1a1612 0 2px, transparent 2px 6px); position: relative; }
+  .map svg { position: absolute; inset: 0; }
+  .map span { position: absolute; left: 8px; bottom: 6px; font-size: 12px; font-family: Archivo, sans-serif; letter-spacing: .1em; }
+  .go { position: absolute; left: 20px; right: 20px; bottom: 44px; height: 62px; border: 0; border-radius: 4px; background: #1d1a16; color: #efe9dc; font: 900 18px "Noto Serif TC"; letter-spacing: .2em; }
+</style>
+</head>
+<body>
+<script src="ios.js" defer></script>
+  <div class="wrap">
+    <header class="mast"><h1>晨跑日報</h1></header>
+    <div class="meta"><span>NO. 0023</span><span>2026.10.08 WED</span><span>晴 24°C</span></div>
+    <h2>連續第 23 天，今天再跑 5 公里</h2>
+    <div class="cols">
+      <p>本報訊　大安森林公園一圈 1.8 公里，今天預計跑兩圈半。昨天夜跑配速 6 分 02 秒，比上週快了 9 秒。</p>
+      <p>教練建議維持輕鬆跑，心率留在第二區，週末再挑戰長距離。</p>
+    </div>
+    <div class="map"><svg viewBox="0 0 349 150" aria-hidden="true"><path d="M30 110 C 60 40, 150 30, 200 60 S 320 120, 300 50" fill="none" stroke="#1d1a16" stroke-width="3"/><circle cx="30" cy="110" r="5" fill="#1d1a16"/></svg><span>路線圖・大安森林公園</span></div>
+  </div>
+  <button class="go">出發</button>
+</body>
+</html>

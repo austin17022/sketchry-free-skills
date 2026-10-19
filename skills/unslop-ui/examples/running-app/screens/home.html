@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>今天的號碼布</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bib.css">
+<style>
+  .head { display: flex; justify-content: space-between; align-items: baseline; padding: 70px 24px 18px; }
+  .head h1 { font-size: 26px; font-weight: 900; letter-spacing: .02em; }
+  .head .streak { font-size: 14px; font-weight: 700; }
+  .head .streak b { color: var(--red); }
+  .sheet { margin: 0 18px; }
+  .band { display: flex; justify-content: space-between; align-items: center; height: 46px; padding: 0 20px; background: var(--red); color: #fff; }
+  .band span { font-size: 13px; font-weight: 700; letter-spacing: .12em; }
+  .band .cap { color: #ffffffd0; }
+  .big { display: flex; align-items: flex-end; gap: 6px; padding: 18px 22px 0 24px; }
+  .big b { font-size: 232px; line-height: .78; letter-spacing: -.05em; }
+  .big span { font-size: 22px; padding-bottom: 8px; }
+  .sub { padding: 14px 24px 18px; font-size: 15px; color: var(--mute); }
+  .sub b { color: var(--ink); }
+  .facts { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1.5px solid var(--blue); margin: 0 24px; padding: 12px 0 18px; }
+  .facts dd { font-size: 15px; font-weight: 700; margin-top: 4px; }
+  .stub { display: flex; justify-content: space-between; align-items: center; padding: 16px 44px 22px 40px; }
+  .stub .n { font-size: 30px; }
+  .stub p { font-size: 13px; color: var(--mute); text-align: right; line-height: 1.5; }
+  .week { display: grid; grid-template-columns: repeat(7, 1fr); margin: 26px 24px 22px; text-align: center; }
+  .week span { font-size: 12px; color: var(--mute); }
+  .week b { display: block; margin-top: 8px; font-size: 19px; height: 24px; }
+  .week b.rest { color: #c9c4b8; }
+  .week .today b { color: var(--red); }
+  .week .today::after { content: ""; display: block; width: 18px; height: 2px; background: var(--red); margin: 6px auto 0; }
+</style>
+</head>
+<body>
+<script src="ios.js" defer></script>
+  <header class="head"><h1>今天跑 5 公里</h1><span class="streak">連續第 <b class="n" style="font-size:20px">23</b> 天</span></header>
+
+  <section class="sheet" id="bib">
+    <canvas class="fx" aria-hidden="true"></canvas>
+    <i class="pin" style="left:12px;top:58px"></i><i class="pin" style="right:12px;top:58px"></i>
+    <div class="band"><span>台北晨跑組</span><span class="cap">Habit Run 2026</span></div>
+    <div class="big"><b class="n">05</b><span class="n">KM</span></div>
+    <p class="sub">今天的距離，約 <b>32 分鐘</b></p>
+    <dl class="facts">
+      <div><dt class="cap">配速</dt><dd>6'20"</dd></div>
+      <div><dt class="cap">強度</dt><dd>輕鬆跑</dd></div>
+      <div><dt class="cap">路線</dt><dd>大安森林</dd></div>
+    </dl>
+    <div class="perf"></div>
+    <div class="stub"><span class="n">No.0023</span><p>撕下存根<br>跑完自動蓋章</p></div>
+    <i class="pin" style="left:12px;bottom:12px"></i><i class="pin" style="right:12px;bottom:12px"></i>
+  </section>
+
+  <div class="week">
+    <div><span>一</span><b class="n">4.2</b></div>
+    <div><span>二</span><b class="n rest">休</b></div>
+    <div><span>三</span><b class="n">5.0</b></div>
+    <div><span>四</span><b class="n">3.0</b></div>
+    <div><span>五</span><b class="n rest">休</b></div>
+    <div><span>六</span><b class="n">6.2</b></div>
+    <div class="today"><span>今天</span><b class="n">5.0</b></div>
+  </div>
+
+  <button class="go" id="go"><span><i></i>開始跑</span><span class="n" style="font-size:22px;font-weight:800">5.0 KM</span></button>
+<script type="module">import './fx.js';</script>
+</body>
+</html>

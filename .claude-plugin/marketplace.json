@@ -1,0 +1,28 @@
+{
+  "name": "sketchry",
+  "owner": { "name": "Sketchry", "url": "https://sketchry.app" },
+  "metadata": { "description": "Free website, deck and video design Skills from Sketchry" },
+  "plugins": [{
+    "name": "sketchry-free-skills",
+    "description": "8 free Claude Code Skills that build finished websites, pitch decks and motion videos. Each Skill produces a complete, working project from a single prompt.",
+    "source": "./",
+    "strict": false,
+    "skills": [
+      "./skills/pitchfold",
+      "./skills/fieldnote",
+      "./skills/worldview-saas",
+      "./skills/cathode-desk",
+      "./skills/smallcaps",
+      "./skills/unslop-ui",
+      "./skills/inkframe",
+      "./skills/offset-studio"
+    ],
+    "homepage": "https://sketchry.app/skills/",
+    "license": "MIT",
+    "keywords": [
+      "website", "portfolio", "landing-page", "pitch-deck", "presentation",
+      "motion-video", "3D", "Three.js", "WebGPU", "design", "UI",
+      "Claude Code", "Codex", "Cursor", "skill"
+    ]
+  }]
+}

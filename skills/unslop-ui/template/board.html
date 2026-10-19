@@ -1,0 +1,227 @@
+<!doctype html>
+<!--
+  unslop-ui 作品板範本（1920×1080）。放在 unslop/board.html，同一層要有 critique.json、screens/、qa/。
+  所有數字都讀 qa/<畫面>/report.json（render-iphone.mjs 產生）與 critique.json，不要手改數字。
+  一般瀏覽器打開會自動播完整段；錄影程式（navigator.webdriver）只載入，等劇本呼叫 __play() 和點 #send。
+-->
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920">
+<title>去 AI 味作品板</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  /* 作品板：1920×1080。左到右＝需求 → AI 第一版檢測 → 三個方向 → 成品手機 → 去 AI 味掃描與分數 */
+  :root { --bg: #f1efe9; --card: #fbfaf7; --ink: #161616; --mute: #8a867c; --line: #e2ded4; --red: #e4412b; --green: #2f8f5b; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); color: var(--ink); font-family: "Noto Sans TC", sans-serif; -webkit-font-smoothing: antialiased; }
+  .n { font-family: Archivo, sans-serif; font-stretch: 62%; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .cap { font-family: Archivo, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--mute); }
+  .card { position: absolute; background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 1px 2px #0000000a, 0 20px 40px -24px #3b321f33; }
+  .in { opacity: 0; transform: translateY(12px); transition: opacity .5s, transform .5s cubic-bezier(.2,.8,.2,1); }
+  .in.on { opacity: 1; transform: none; }
+  .arrow { position: absolute; top: 528px; height: 24px; }
+  .arrow path { stroke: #bdb8ab; stroke-width: 2; fill: none; }
+
+  /* 1. 需求 */
+  #prompt { left: 56px; top: 270px; width: 300px; padding: 22px 22px 18px; }
+  #prompt p.txt { font-size: 20px; line-height: 1.55; font-weight: 500; min-height: 93px; margin-top: 10px; }
+  #prompt p.txt::after { content: ""; display: inline-block; width: 2px; height: 22px; background: var(--ink); vertical-align: -4px; margin-left: 2px; animation: caret 1s steps(1) infinite; }
+  #prompt.sent p.txt::after { display: none; }
+  @keyframes caret { 50% { opacity: 0; } }
+  .bar { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+  .chip { font-family: Archivo, sans-serif; font-size: 14px; font-weight: 700; padding: 6px 10px; border-radius: 8px; background: #ebe8df; }
+  #send { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--ink); display: grid; place-items: center; cursor: pointer; transition: transform .1s, background .2s; }
+  #send:active { transform: scale(.92); }
+  #prompt.sent #send { background: #bdb8ab; }
+
+  /* 2. AI 第一版：先檢測 */
+  #before { left: 56px; top: 520px; width: 300px; padding: 18px; display: grid; grid-template-columns: 112px 1fr; gap: 16px; }
+  .mini { position: relative; width: 112px; height: 243px; border-radius: 18px; overflow: hidden; box-shadow: 0 0 0 4px #1a1a1a; }
+  .mini iframe { width: 393px; height: 852px; border: 0; transform: scale(.285); transform-origin: 0 0; pointer-events: none; }
+  #before .score { font-size: 64px; line-height: .9; color: var(--red); margin-top: 8px; }
+  #before .score small { font-size: 20px; color: var(--mute); }
+  #before ul { list-style: none; margin-top: 12px; display: grid; gap: 7px; }
+  #before li { font-size: 13px; display: flex; gap: 7px; align-items: center; opacity: 0; transform: translateX(-6px); transition: all .3s; }
+  #before li.on { opacity: 1; transform: none; }
+  #before li::before { content: "×"; color: var(--red); font-weight: 900; font-size: 15px; }
+
+  /* 3. 三個方向 */
+  #dirs { position: absolute; left: 420px; top: 205px; width: 210px; }
+  .dir { position: relative; display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center; padding: 12px; margin-top: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; transition: border-color .3s, box-shadow .3s, opacity .3s; }
+  .dir .mini { width: 64px; height: 139px; border-radius: 11px; box-shadow: 0 0 0 3px #1a1a1a; }
+  .dir .mini iframe { transform: scale(.163); }
+  .dir b { font-size: 16px; } .dir p { font-size: 12px; color: var(--mute); margin-top: 4px; line-height: 1.5; }
+  .dir.picked { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+  .dir .tick { position: absolute; right: 10px; top: 10px; font-size: 12px; font-weight: 900; color: #fff; background: var(--ink); border-radius: 6px; padding: 2px 6px; opacity: 0; transition: opacity .3s; }
+  .dir.picked .tick { opacity: 1; }
+  #dirs.chosen .dir:not(.picked) { opacity: .5; }
+
+  /* 4. 成品手機：點側邊那支，它就移到中間 */
+  #stage { position: absolute; left: 676px; top: 0; width: 830px; height: 1080px; }
+  .ph { position: absolute; left: 50%; top: 50%; width: 417px; height: 876px; margin: -438px 0 0 -208px; border-radius: 64px; background: #111; padding: 12px; box-shadow: 0 0 0 1.5px #3a3a3a inset, 0 40px 70px -30px #00000066; transition: transform .6s cubic-bezier(.2,.8,.2,1), opacity .5s, filter .6s; opacity: 0; }
+  .ph::after { content: ""; position: absolute; left: 50%; top: 23px; width: 122px; height: 34px; margin-left: -61px; border-radius: 20px; background: #000; pointer-events: none; }
+  .ph .scr { width: 393px; height: 852px; border-radius: 52px; overflow: hidden; background: #fff; }
+  .ph iframe { width: 393px; height: 852px; border: 0; display: block; pointer-events: none; }
+  .ph.center iframe { pointer-events: auto; }
+  .ph.on { opacity: 1; }
+  .ph:not(.center) { cursor: pointer; }
+
+  /* 5. 掃描與分數 */
+  #scan { left: 1570px; top: 170px; width: 300px; padding: 22px; z-index: 30; }
+  #scan h3 { font-size: 18px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; }
+  #scan h3 span { font-size: 13px; font-weight: 500; color: var(--mute); }
+  .prog { height: 6px; border-radius: 3px; background: #e8e5dc; margin: 14px 0 16px; overflow: hidden; }
+  .prog i { display: block; height: 100%; width: 0; background: var(--ink); transition: width 2.2s linear; }
+  .checks { list-style: none; display: grid; gap: 11px; }
+  .checks li { display: flex; gap: 10px; align-items: center; font-size: 14px; opacity: .35; transition: opacity .3s; }
+  .checks li i { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #cfcabd; display: grid; place-items: center; transition: all .3s; }
+  .checks li.on { opacity: 1; }
+  .checks li.on i { background: var(--green); border-color: var(--green); }
+  .checks li.on i::after { content: ""; width: 8px; height: 4px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg) translate(1px, -1px); }
+  .ai { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .ai .n { font-size: 40px; line-height: .9; }
+  .ai s { color: var(--red); text-decoration-thickness: 3px; }
+  .total { display: flex; align-items: flex-end; gap: 6px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .total b { font-size: 92px; line-height: .8; }
+  .total span { font-size: 22px; color: var(--mute); padding-bottom: 4px; }
+  .bars { display: grid; gap: 9px; margin-top: 16px; }
+  .bars div { display: grid; grid-template-columns: 76px 1fr 26px; gap: 10px; align-items: center; font-size: 13px; }
+  .bars em { height: 6px; border-radius: 3px; background: #e8e5dc; overflow: hidden; }
+  .bars em i { display: block; height: 100%; width: 0; background: var(--green); transition: width .8s cubic-bezier(.2,.8,.2,1); }
+  .bars b { font-family: Archivo, sans-serif; font-size: 13px; text-align: right; }
+
+  .brand { position: absolute; left: 56px; top: 52px; display: flex; gap: 14px; align-items: baseline; }
+  .brand b { font-family: Archivo, sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -.01em; }
+  .brand span { font-size: 15px; color: var(--mute); }
+</style>
+</head>
+<body>
+  <div class="brand"><b>unslop-ui</b><span data-t="tagline">先檢測 AI 味，再給你不像 AI 做的版本</span></div>
+
+  <section class="card" id="prompt">
+    <p class="cap" data-t="prompt">你的需求</p>
+    <p class="txt" id="txt"></p>
+    <div class="bar"><span class="chip">/unslop-ui</span>
+      <button id="send" aria-label="送出"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+  </section>
+
+  <section class="card in" id="before">
+    <div class="mini"><iframe src="screens/before.html" scrolling="no" tabindex="-1"></iframe></div>
+    <div><p class="cap" data-t="before">AI 第一版</p><p class="score n"><span id="aiBefore">0</span><small>／100</small></p><p style="font-size:13px;color:var(--mute);margin-top:4px" data-t="ai">AI 味指數</p><ul id="finds"></ul></div>
+  </section>
+
+  <svg class="arrow in" id="a1" style="left:368px;width:40px"><path d="M2 12h34M28 5l8 7-8 7"/></svg>
+  <div id="dirs" class="in"><p class="cap" data-t="dirs">真實靈感・三個方向</p></div>
+  <svg class="arrow in" id="a2" style="left:642px;width:40px"><path d="M2 12h34M28 5l8 7-8 7"/></svg>
+  <div id="stage"></div>
+  <svg class="arrow in" id="a3" style="left:1512px;width:40px"><path d="M2 12h34M28 5l8 7-8 7"/></svg>
+
+  <section class="card in" id="scan">
+    <h3><span data-t="scan">去 AI 味掃描</span> <span id="state" data-t="waiting">等待中</span></h3>
+    <div class="prog"><i id="prog"></i></div>
+    <ul class="checks" id="checks"></ul>
+    <div class="ai"><div><p class="cap" data-t="ai">AI 味指數</p></div><p class="n"><s id="aiFrom">60</s>　<span id="aiTo">0</span></p></div>
+    <div class="total"><b class="n" id="score">0</b><span class="n">／100</span><p style="margin-left:auto;font-size:13px;color:var(--mute);padding-bottom:6px" data-t="score">設計分數</p></div>
+    <div class="bars" id="bars"></div>
+  </section>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const get = p => fetch(p).then(r => r.json());
+  let C, R = {}, phones = [], center = 2, LANG = 'en', T;
+  // 介面文字：critique.json 的 "lang" 是 "zh" 或 "en"（預設 en）
+  const TEXT = {
+    zh: { tagline: '先檢測 AI 味，再給你不像 AI 做的版本', prompt: '你的需求', before: 'AI 第一版', ai: 'AI 味指數', dirs: '真實靈感・三個方向', scan: '去 AI 味掃描',
+          waiting: '等待中', scanning: '掃描中', done: '完成', score: '設計分數', pick: '選這個', auto: '自動檢查',
+          checks: (c, n, k) => [`真實靈感：${c}`, `${n} 個畫面同一套設計語言`, `iPhone 尺寸可用 ${k.usable}／${n}`, `套版樣式 ${k.aiAfter / 10}／10`, `材質 shader ${k.painted}／${k.withFx} 有畫出來`] },
+    en: { tagline: 'Measure the AI slop, then get a version that does not look AI-made', prompt: 'Your brief', before: 'First AI draft', ai: 'AI-slop score', dirs: 'Real-world idea, three directions', scan: 'Un-slop scan',
+          waiting: 'Waiting', scanning: 'Scanning', done: 'Done', score: 'Design score', pick: 'Picked', auto: 'Auto checks',
+          checks: (c, n, k) => [`Real concept: ${c}`, `${n} screens, one design language`, `Usable at iPhone size ${k.usable}/${n}`, `Template patterns ${k.aiAfter / 10}/10`, `Material shader painted ${k.painted}/${k.withFx}`] },
+  };
+
+  // 數字全部來自 render-iphone.mjs 的報告（qa/*/report.json）與第七步的批判評分（critique.json）
+  async function load() {
+    C = await get('critique.json');
+    LANG = C.lang === 'zh' ? 'zh' : 'en'; T = TEXT[LANG]; document.documentElement.lang = LANG === 'zh' ? 'zh-Hant' : 'en';
+    document.querySelectorAll('[data-t]').forEach(el => { el.textContent = T[el.dataset.t]; });
+    for (const s of new Set([C.before, ...C.final, ...C.board])) R[s] = await get(`qa/${s}/report.json`);
+    const finals = C.final.map(s => R[s]);
+    const aiAfter = Math.max(...finals.map(r => r.aiScore));
+    const usable = finals.filter(r => !r.usability.length).length;
+    // shader 只放在需要材質的畫面，所以只檢查「有放的那幾頁有沒有真的畫出來」
+    const withFx = finals.filter(r => r.shader.length), painted = withFx.filter(r => r.shader.every(x => x.painted)).length;
+    const auto = Math.round(20 * (1 - aiAfter / 100) + 15 * usable / finals.length + 15 * (withFx.length ? painted / withFx.length : 1));
+    C.calc = { aiAfter, usable, painted, withFx: withFx.length, auto, total: auto + C.questions.reduce((a, q) => a + q.score, 0) };
+
+    for (const d of C.directions) $('dirs').insertAdjacentHTML('beforeend',
+      `<div class="dir in${d.picked ? ' pick' : ''}"><div class="mini"><iframe src="screens/${d.screen}.html" scrolling="no" tabindex="-1"></iframe></div><div><b>${d.name}</b><p>${d.line}</p></div><span class="tick">${T.pick}</span></div>`);
+    C.board.forEach((s, i) => {
+      const el = document.createElement('div');
+      el.className = 'ph';
+      el.innerHTML = `<div class="scr"><iframe src="screens/${s}.html" title="${s}"></iframe></div>`;
+      el.dataset.i = i;
+      el.addEventListener('click', () => focus(i));  // 側邊的手機點一下就移到中間；中間那支的點擊會進到畫面裡
+      $('stage').append(el); phones.push(el);
+    });
+    const n = C.final.length;
+    const checks = T.checks(C.concept, n, C.calc);
+    $('checks').innerHTML = checks.map(c => `<li><i></i>${c}</li>`).join('');
+    $('bars').innerHTML = C.questions.map(q => `<div><span>${q.key}</span><em><i data-w="${q.score * 10}"></i></em><b>${q.score}</b></div>`).join('') +
+      `<div><span>${T.auto}</span><em><i data-w="${C.calc.auto * 2}"></i></em><b>${C.calc.auto}</b></div>`;
+    $('aiFrom').textContent = R[C.before].aiScore;
+    layout();
+    await Promise.all([...document.querySelectorAll('iframe')].map(f => new Promise(r => f.contentDocument?.readyState === 'complete' && f.contentDocument.URL !== 'about:blank' ? r() : f.addEventListener('load', r))));
+    await document.fonts.ready;
+    window.__ready = true;
+  }
+
+  // 中間那支最大，往兩邊越小、越後面
+  function layout() {
+    phones.forEach((el, i) => {
+      const k = i - center, a = Math.abs(k);
+      const s = [0.84, 0.66, 0.52][a], dx = [0, 212, 346][a] * Math.sign(k);
+      el.style.transform = `translateX(${dx}px) scale(${s})`;
+      el.style.zIndex = 10 - a;
+      el.style.filter = a ? `saturate(${1 - a * .12})` : 'none';
+      el.classList.toggle('center', a === 0);
+    });
+  }
+  function focus(i) { if (i !== center) { center = i; layout(); } }
+  function count(el, to, ms) { const t0 = performance.now(), from = +el.textContent || 0; (function f(t) { const k = Math.min(1, (t - t0) / ms); el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); })(t0); }
+
+  // 打字：錄影程式一開始呼叫 __play()，打完等游標按送出
+  window.__play = async () => {
+    const s = C.prompt;
+    for (let i = 1; i <= s.length; i++) { $('txt').textContent = s.slice(0, i); await wait(55); }
+  };
+  async function run() {
+    if ($('prompt').classList.contains('sent')) return;
+    if (!$('txt').textContent) $('txt').textContent = C.prompt;
+    $('prompt').classList.add('sent');
+    $('before').classList.add('on'); count($('aiBefore'), R[C.before].aiScore, 900);
+    const top = R[C.before].slop.slice(0, 4);
+    $('finds').innerHTML = top.map(f => `<li>${LANG === 'zh' ? f.label : f.label_en || f.label}</li>`).join('');
+    for (const li of $('finds').children) { await wait(160); li.classList.add('on'); }
+    $('a1').classList.add('on'); $('dirs').classList.add('on');
+    for (const d of document.querySelectorAll('.dir')) { await wait(220); d.classList.add('on'); }
+    await wait(450);
+    document.querySelector('.dir.pick').classList.add('picked'); $('dirs').classList.add('chosen');
+    await wait(400); $('a2').classList.add('on');
+    for (const i of [2, 1, 3, 0, 4]) { phones[i].classList.add('on'); await wait(130); }
+    await wait(300); $('a3').classList.add('on'); $('scan').classList.add('on');
+    $('state').textContent = T.scanning; $('prog').style.width = '100%';
+    for (const li of $('checks').children) { await wait(420); li.classList.add('on'); }
+    $('state').textContent = T.done;
+    count($('aiTo'), C.calc.aiAfter, 400);
+    await wait(250);
+    count($('score'), C.calc.total, 1100);
+    for (const i of $('bars').querySelectorAll('i')) { i.style.width = i.dataset.w + '%'; await wait(90); }
+  }
+  $('send').addEventListener('click', run);
+  if (!navigator.webdriver) load().then(async () => { await window.__play(); await wait(500); run(); });
+  else load();
+</script>
+</body>
+</html>
