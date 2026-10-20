@@ -8,6 +8,10 @@ MIT License. See [LICENSE](LICENSE).
 
 Derived from the `shaders` project, MIT License. Copyright (c) 2026 Shader Effects Inc. See `skills/unslop-ui/references/shaders/LICENSE-shaders.txt`.
 
+## skills/shadowplay/
+
+Style notes adapted from the Lemo-Opuscar style library by LemoLab (https://github.com/lemomo-ai/lemo-opuscar), MIT License, Copyright (c) 2026 LemoLab. The full notice is in the Credits section at the end of `skills/shadowplay/SKILL.md`.
+
 ## Third-party resources fetched at build time
 
 The Skills instruct the AI to fetch the following resources when building a project. These resources are **not redistributed** in this repository and remain under their own licenses:
@@ -19,7 +23,9 @@ The Skills instruct the AI to fetch the following resources when building a proj
 - **shaders** npm package (MIT, free tier; Pro presets require a subscription): WebGPU shader components. Loaded via jsDelivr CDN (`https://cdn.jsdelivr.net/npm/shaders@4.0.2/dist/js/bundle.js`). Used by unslop-ui.
 - **playwright-core** (Apache-2.0): Browser automation. Installed via npm. Used by unslop-ui scripts for screenshots and recording.
 - **puppeteer-core**: Browser automation. Installed via npm. Used by inkframe for frame-by-frame rendering.
-- **FFmpeg**: Video encoding. System dependency. Used by inkframe and unslop-ui.
+- **FFmpeg**: Video encoding. System dependency. Used by inkframe, shadowplay and unslop-ui.
+- **Noto Serif TC, Cormorant Garamond** (SIL Open Font License): downloaded from the Google Fonts repository on GitHub by shadowplay.
+- **playwright-core** or **puppeteer-core**, and **numpy, scipy, soundfile** (BSD-3-Clause): frame capture and audio synthesis in shadowplay. Installed via npm and pip.
 
 ## offset-studio media
 

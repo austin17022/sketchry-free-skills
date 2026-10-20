@@ -13,6 +13,7 @@ Free Claude Code / Codex / Cursor Skills that build finished websites, pitch dec
 | **smallcaps** | Minimal interaction-craft portfolio | [Live demo](https://sketchry.app/demos/smallcaps/) | Website |
 | **unslop-ui** | AI-slop score + redesigned app screens | [Skill page](https://sketchry.app/skills/unslop-ui/) | App design |
 | **inkframe** | Chinese motion video (MP4) from code | [Skill page](https://sketchry.app/skills/inkframe/) | Video |
+| **shadowplay** | Shadow-puppet theatre motion video (MP4) from code | [Skill page](https://sketchry.app/skills/shadowplay/) | Video |
 | **offset-studio** | Design studio portfolio | [Skill page](https://sketchry.app/skills/offset-studio/) | Website |
 
 ## Install
@@ -64,7 +65,7 @@ MIT (see [LICENSE](LICENSE)). Refer to [NOTICE.md](NOTICE.md) for third-party at
 
 ## 繁體中文
 
-Sketchry 免費 Skills：8 個可以直接用在 Claude Code、Codex 或 Cursor 的 Skill，一句話就能做出完整的網站、簡報或動態影片。
+Sketchry 免費 Skills：9 個可以直接用在 Claude Code、Codex 或 Cursor 的 Skill，一句話就能做出完整的網站、簡報或動態影片。
 
 安裝方式：
 

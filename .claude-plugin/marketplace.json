@@ -4,7 +4,7 @@
   "metadata": { "description": "Free website, deck and video design Skills from Sketchry" },
   "plugins": [{
     "name": "sketchry-free-skills",
-    "description": "8 free Claude Code Skills that build finished websites, pitch decks and motion videos. Each Skill produces a complete, working project from a single prompt.",
+    "description": "9 free Claude Code Skills that build finished websites, pitch decks and motion videos. Each Skill produces a complete, working project from a single prompt.",
     "source": "./",
     "strict": false,
     "skills": [
@@ -15,6 +15,7 @@
       "./skills/smallcaps",
       "./skills/unslop-ui",
       "./skills/inkframe",
+      "./skills/shadowplay",
       "./skills/offset-studio"
     ],
     "homepage": "https://sketchry.app/skills/",
