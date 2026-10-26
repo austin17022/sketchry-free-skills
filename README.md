@@ -12,6 +12,7 @@ Free Claude Code / Codex / Cursor Skills that build finished websites, pitch dec
 | **cathode-desk** | 3D retro-computer portfolio | [Live demo](https://sketchry.app/demos/cathode-desk/) | Website |
 | **smallcaps** | Minimal interaction-craft portfolio | [Live demo](https://sketchry.app/demos/smallcaps/) | Website |
 | **unslop-ui** | AI-slop score + redesigned app screens | [Skill page](https://sketchry.app/skills/unslop-ui/) | App design |
+| **vitrelle** | Glass dashboard wallpaper filled with your own day | [Skill page](https://sketchry.app/skills/vitrelle/) | App design |
 | **inkframe** | Chinese motion video (MP4) from code | [Skill page](https://sketchry.app/skills/inkframe/) | Video |
 | **shadowplay** | Shadow-puppet theatre motion video (MP4) from code | [Skill page](https://sketchry.app/skills/shadowplay/) | Video |
 | **offset-studio** | Design studio portfolio | [Skill page](https://sketchry.app/skills/offset-studio/) | Website |

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Desk</title>
+<link rel="stylesheet" href="desk.css">
+</head>
+<body>
+<div class="bg" aria-hidden="true">
+  <div class="photo"></div>
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div>
+  <div class="gridbg"></div><div class="noise"></div>
+</div>
+<div class="island" id="island" aria-live="polite">
+  <div class="wv"><i></i><i></i><i></i><i></i></div>
+  <div class="msg"><div class="mi" id="iIc"></div><div class="mt"><b id="iT"></b><span id="iS"></span></div></div>
+</div>
+<main class="desk" id="desk">
+  <header class="top">
+    <div>
+      <div class="date"><span id="date"></span><span class="wk" id="wk"></span></div>
+      <div class="greet" id="greet"></div>
+    </div>
+    <div class="hr">
+      <div class="clock" id="clock"></div>
+      <div class="chips" id="chips"></div>
+    </div>
+  </header>
+  <div class="grid" id="grid"></div>
+</main>
+<!-- Your content lives in data.js. desk.js draws it and rarely needs edits. -->
+<script src="data.js"></script>
+<script src="desk.js"></script>
+</body>
+</html>
