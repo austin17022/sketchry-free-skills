@@ -8,6 +8,7 @@ Free Claude Code / Codex / Cursor Skills that build finished websites, pitch dec
 |---|---|---|---|
 | **pitchfold** | Dark editorial seed pitch deck (HTML, PDF, PPTX) | [Live demo](https://sketchry.app/demos/pitchfold/) | Deck |
 | **fieldnote** | Field-research notebook deck (HTML, PDF, PPTX) | [Live demo](https://sketchry.app/demos/fieldnote/) | Deck |
+| **vellary** | 3D bookcase reading list: pull a book out, open it | [Live demo](https://sketchry.app/demos/vellary/) | Website |
 | **worldview-saas** | AI SaaS landing page with 3D Earth | [Live demo](https://sketchry.app/demos/worldview-saas/) | Website |
 | **cathode-desk** | 3D retro-computer portfolio | [Live demo](https://sketchry.app/demos/cathode-desk/) | Website |
 | **smallcaps** | Minimal interaction-craft portfolio | [Live demo](https://sketchry.app/demos/smallcaps/) | Website |
