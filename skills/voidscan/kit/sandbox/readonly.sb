@@ -1,0 +1,27 @@
+(version 1)
+(allow default)
+; VOIDSCAN agents are read-only: no writes or deletes anywhere in your home folder or on external drives.
+; HOME, HOME_RE, APP and PROJ are passed in by claude-sandboxed.sh.
+(deny file-write* (subpath (param "HOME")) (subpath "/Volumes"))
+; The few places Claude Code itself must write to keep its session and login working
+(allow file-write*
+  (regex (string-append "^" (param "HOME_RE") "/\\.claude\\.json"))
+  (subpath (param "PROJ"))
+  (subpath (string-append (param "HOME") "/.claude/todos"))
+  (subpath (string-append (param "HOME") "/.claude/shell-snapshots"))
+  (subpath (string-append (param "HOME") "/.claude/session-env"))
+  (subpath (string-append (param "HOME") "/.claude/statsig"))
+  (subpath (string-append (param "HOME") "/.claude/debug"))
+  (subpath (string-append (param "HOME") "/.claude/telemetry"))
+  (subpath (string-append (param "HOME") "/.claude/file-history"))
+  (subpath (string-append (param "HOME") "/.claude/plans"))
+  (subpath (string-append (param "HOME") "/.claude/tasks"))
+  (subpath (string-append (param "HOME") "/.claude/cache"))
+  (subpath (string-append (param "HOME") "/.claude/paste-cache"))
+  (subpath (string-append (param "HOME") "/.claude/backups"))
+  (subpath (string-append (param "HOME") "/.claude/stats-cache.json"))
+  (subpath (string-append (param "HOME") "/Library/Caches/claude-cli-nodejs"))
+  (subpath (string-append (param "HOME") "/.local/state/claude"))
+  (subpath (string-append (param "HOME") "/.local/share/claude"))
+  (subpath (string-append (param "HOME") "/.cache/claude"))
+  (subpath (string-append (param "APP") "/agent-cwd")))

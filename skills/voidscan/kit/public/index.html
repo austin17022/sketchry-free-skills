@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VOIDSCAN 磁碟指揮中心</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+TC:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+@property --a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+:root {
+  --bg: #03050b;
+  --ink: #eaf3ff;
+  --ink-2: rgba(234, 243, 255, .74);
+  --ink-3: rgba(234, 243, 255, .48);
+  --ink-4: rgba(234, 243, 255, .28);
+  --line: rgba(160, 200, 255, .12);
+  --cyan: #3fe6ff;
+  --violet: #8c7cff;
+  --magenta: #ff5bd3;
+  --green: #3dffb4;
+  --amber: #ffc455;
+  --red: #ff5f7a;
+  --num: "Space Grotesk", "Noto Sans TC", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); }
+body { font: 15px/1.55 "Noto Sans TC", system-ui, -apple-system, sans-serif; overflow: hidden; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+button:disabled { cursor: not-allowed; opacity: .38; }
+
+/* ───────── 背景 ───────── */
+.bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.aurora { position: absolute; width: 62vmax; height: 62vmax; border-radius: 50%; filter: blur(90px); opacity: .40; mix-blend-mode: screen; }
+.aurora.a1 { background: radial-gradient(circle, #1fb8ff, transparent 62%); top: -26vmax; left: -16vmax; animation: drift1 26s ease-in-out infinite alternate; }
+.aurora.a2 { background: radial-gradient(circle, #7a5cff, transparent 62%); top: 8vmax; right: -24vmax; animation: drift2 32s ease-in-out infinite alternate; }
+.aurora.a3 { background: radial-gradient(circle, #ff3fc2, transparent 64%); bottom: -34vmax; left: 18vmax; opacity: .24; animation: drift3 38s ease-in-out infinite alternate; }
+@keyframes drift1 { to { transform: translate(18vmax, 12vmax) scale(1.15); } }
+@keyframes drift2 { to { transform: translate(-16vmax, 14vmax) scale(.9); } }
+@keyframes drift3 { to { transform: translate(-12vmax, -10vmax) scale(1.2); } }
+.gridbg { position: absolute; inset: -50%; background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(ellipse 60% 50% at 50% 45%, #000, transparent 72%); opacity: .5; animation: pan 40s linear infinite; }
+@keyframes pan { to { transform: translate(56px, 56px); } }
+.beam { position: absolute; height: 1px; width: 38vw; opacity: 0; transform: rotate(-24deg); animation: beam 9s linear infinite; background: linear-gradient(90deg, transparent, var(--cyan), transparent); filter: drop-shadow(0 0 6px var(--cyan)); }
+.beam.b1 { top: 16%; } .beam.b2 { top: 50%; animation-delay: 3.2s; background: linear-gradient(90deg, transparent, var(--violet), transparent); } .beam.b3 { top: 80%; animation-delay: 6.1s; background: linear-gradient(90deg, transparent, var(--magenta), transparent); }
+@keyframes beam { 0% { left: -40vw; opacity: 0; } 10%, 60% { opacity: .85; } 100% { left: 110vw; opacity: 0; } }
+.noise { position: absolute; inset: 0; opacity: .055; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+
+/* ───────── 玻璃＋流光邊框 ───────── */
+.glass { position: relative; isolation: isolate; background: linear-gradient(140deg, rgba(255,255,255,.06), rgba(255,255,255,.015)); backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%); box-shadow: inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 0 1px rgba(255,255,255,.06), 0 30px 80px rgba(0,0,0,.55); }
+.glass::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; z-index: -1; background: conic-gradient(from var(--a), transparent 0 62%, rgba(63,230,255,.9) 72%, rgba(140,124,255,.9) 80%, transparent 90%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: spin 9s linear infinite; opacity: .7; }
+@keyframes spin { to { --a: 360deg; } }
+
+/* ───────── 視窗 ───────── */
+.win { position: fixed; inset: 16px; z-index: 1; border-radius: 26px; display: flex; flex-direction: column; overflow: hidden; }
+.bar { display: flex; align-items: center; gap: 18px; padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,.06); position: relative; z-index: 5; }
+.brand { display: flex; align-items: center; gap: 12px; flex: none; }
+.logo { width: 34px; height: 34px; }
+.logo .ring { transform-origin: 50% 50%; animation: rot 6s linear infinite; }
+@keyframes rot { to { transform: rotate(360deg); } }
+.brand h1 { margin: 0; font: 700 16px/1 var(--num); letter-spacing: .3em; background: linear-gradient(90deg, #fff, var(--cyan) 55%, var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.brand small { display: block; margin-top: 4px; font-size: 11px; color: var(--ink-3); letter-spacing: .18em; }
+.steps { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; }
+.step { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-4); white-space: nowrap; transition: color .3s; }
+.step i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.18); transition: all .3s; }
+.step.on { color: var(--ink); } .step.on i { background: var(--cyan); box-shadow: 0 0 0 4px rgba(63,230,255,.15), 0 0 14px var(--cyan); animation: pulse 1.2s ease-in-out infinite; }
+.step.done { color: var(--ink-2); } .step.done i { background: var(--green); box-shadow: 0 0 10px rgba(61,255,180,.7); }
+@keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(63,230,255,.04), 0 0 18px var(--cyan); } }
+.link { width: 46px; height: 1px; margin: 0 10px; background: rgba(255,255,255,.12); position: relative; overflow: hidden; }
+.link.live::after { content: ""; position: absolute; top: 0; bottom: 0; width: 50%; left: -50%; background: linear-gradient(90deg, transparent, var(--cyan), transparent); animation: travel 1.4s linear infinite; }
+.link.done { background: linear-gradient(90deg, rgba(61,255,180,.6), rgba(63,230,255,.5)); }
+@keyframes travel { to { left: 100%; } }
+.bar-right { display: flex; align-items: center; gap: 8px; flex: none; }
+.chip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 999px; font-size: 12px; color: var(--ink-2); background: rgba(255,255,255,.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,.09); white-space: nowrap; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); flex: none; }
+.dot.run { background: var(--cyan); box-shadow: 0 0 12px var(--cyan); animation: blinkdot 1.1s ease-in-out infinite; }
+.dot.idle { background: rgba(255,255,255,.3); box-shadow: none; }
+@keyframes blinkdot { 50% { transform: scale(1.7); opacity: .5; } }
+.tbtn { padding: 7px 13px; border-radius: 11px; font-size: 13px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 7px; transition: background .2s, color .2s; }
+.tbtn:hover:not(:disabled) { background: rgba(255,255,255,.07); color: var(--ink); }
+.tbtn.on { background: rgba(63,230,255,.1); color: var(--ink); box-shadow: inset 0 0 0 1px rgba(63,230,255,.35); }
+.btn { position: relative; overflow: hidden; padding: 11px 18px; border-radius: 14px; font-size: 14px; font-weight: 500; background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); transition: transform .2s, box-shadow .2s, background .2s; white-space: nowrap; }
+.btn:hover:not(:disabled) { background: rgba(255,255,255,.1); box-shadow: inset 0 0 0 1px rgba(63,230,255,.55), 0 0 22px rgba(63,230,255,.2); transform: translateY(-1px); }
+.btn.primary { color: #020611; font-weight: 700; background: linear-gradient(110deg, var(--cyan), var(--violet) 45%, var(--magenta) 70%, var(--cyan)); background-size: 260% 100%; animation: flow 5s linear infinite; box-shadow: 0 0 26px rgba(63,230,255,.35), inset 0 1px 0 rgba(255,255,255,.5); }
+.btn.primary:hover:not(:disabled) { box-shadow: 0 0 40px rgba(63,230,255,.6), inset 0 1px 0 rgba(255,255,255,.6); }
+@keyframes flow { to { background-position: -260% 0; } }
+.btn::after { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.45), transparent); transform: skewX(-20deg); }
+.btn:hover:not(:disabled)::after { animation: sheen .9s ease; }
+@keyframes sheen { to { left: 130%; } }
+
+/* ───────── 地圖舞台 ───────── */
+.stage { position: relative; flex: 1; min-height: 0; }
+.mapArea { position: absolute; inset: 0; }
+#mapSvg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.lot { cursor: pointer; }
+.lot .edge { fill: none; stroke-width: 1.1; }
+.lot .sheen { fill: url(#sheen); pointer-events: none; }
+.lot .flow { fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 5 95; animation: flowline var(--t, 6s) linear infinite; animation-delay: var(--dl, 0s); filter: url(#glow); pointer-events: none; }
+@keyframes flowline { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+.lot:hover .fill { filter: brightness(1.55); }
+.lot:hover .edge { stroke-width: 1.8; filter: url(#glow); }
+.lot.measuring .fill { animation: lotPulse 1.1s ease-in-out infinite; }
+@keyframes lotPulse { 50% { filter: brightness(1.9); } }
+.lot.dashed .edge { stroke-dasharray: 3 5; }
+.ring { fill: none; stroke-width: 1; pointer-events: none; }
+.ringflow { fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 9 91; pointer-events: none; animation: flowline var(--t, 8s) linear infinite; animation-delay: var(--dl, 0s); filter: url(#glow); }
+.ringflow.rev { animation-direction: reverse; }
+.lot.sel .edge { stroke-width: 2; filter: url(#glow); }
+.labels { position: absolute; inset: 0; pointer-events: none; }
+.lab { position: absolute; transform: translate(-50%, -50%); text-align: center; white-space: nowrap; }
+.lab .n { color: rgba(255,255,255,.86); overflow: hidden; text-overflow: ellipsis; margin: 0 auto; }
+.lab .s { font-family: var(--num); font-weight: 500; letter-spacing: -.01em; color: #fff; }
+.lab .m { font-size: 13px; }
+.lab.free .s { color: var(--green); text-shadow: 0 0 22px rgba(61,255,180,.8); }
+.mapEmpty { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; padding-left: 36%; }
+.radar { width: 320px; height: 320px; border-radius: 50%; position: relative; box-shadow: inset 0 0 0 1px rgba(63,230,255,.25); background: radial-gradient(circle, transparent 32%, rgba(63,230,255,.10) 33%, transparent 34%, transparent 64%, rgba(63,230,255,.10) 65%, transparent 66%); overflow: hidden; }
+.radar::after { content: ""; position: absolute; inset: 0; background: conic-gradient(from 0deg, rgba(63,230,255,.5), transparent 22%); animation: rot 2.8s linear infinite; }
+.tip { position: fixed; z-index: 30; pointer-events: none; padding: 10px 13px; border-radius: 12px; font-size: 12.5px; max-width: 320px; opacity: 0; transform: translateY(4px); transition: opacity .15s, transform .15s; background: linear-gradient(140deg, rgba(16,22,40,.9), rgba(8,10,20,.88)); }
+.tip.show { opacity: 1; transform: none; }
+.tip b { font: 600 15px var(--num); display: block; }
+.tip .p { font: 11px var(--mono); color: var(--ink-3); word-break: break-all; margin-top: 3px; }
+.tip .r { color: var(--ink-2); margin-top: 5px; }
+
+/* ───────── 左上面板 ───────── */
+.panel { position: absolute; left: 26px; top: 24px; width: min(500px, 36%); height: calc(66% - 24px); display: flex; flex-direction: column; z-index: 4; }
+.hero { display: flex; align-items: flex-end; gap: 14px; }
+.hero .big { font: 300 88px/0.9 var(--num); letter-spacing: -.04em; background: linear-gradient(180deg, #fff 20%, #9fefff); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 26px rgba(63,230,255,.28)); }
+.hero .g { font: 400 24px var(--num); color: var(--ink-2); margin-left: 2px; }
+.hero .cap { font-size: 13px; color: var(--ink-3); padding-bottom: 10px; }
+.summary { font-size: 18px; margin: 14px 0 6px; }
+.summary em { font-style: normal; font-family: var(--num); font-weight: 500; color: var(--cyan); text-shadow: 0 0 14px rgba(63,230,255,.5); }
+.status { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--ink-3); min-height: 22px; cursor: pointer; overflow: hidden; white-space: nowrap; }
+.status:hover { color: var(--ink-2); }
+.status .spin { width: 12px; height: 12px; border-radius: 50%; flex: none; border: 1.5px solid rgba(63,230,255,.25); border-top-color: var(--cyan); animation: rot .8s linear infinite; }
+.status span { overflow: hidden; text-overflow: ellipsis; }
+.list { flex: 1; min-height: 0; overflow-y: auto; margin: 6px -8px 0 0; padding-right: 8px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.14) transparent; mask-image: linear-gradient(#000 calc(100% - 24px), transparent); }
+.grp { margin-top: 10px; }
+.grp-h { display: flex; align-items: center; gap: 9px; padding: 8px 0; font-size: 14px; font-weight: 500; border-bottom: 1px solid rgba(255,255,255,.1); }
+.grp-h .ic { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.grp-h .ic.safe { background: var(--green); box-shadow: 0 0 10px var(--green); }
+.grp-h .ic.conf { background: linear-gradient(90deg, var(--amber) 50%, transparent 50%); box-shadow: inset 0 0 0 1.5px var(--amber); }
+.grp-h .ic.pend { box-shadow: inset 0 0 0 1.5px var(--ink-3); }
+.grp-h .ic.wd { box-shadow: inset 0 0 0 1.5px var(--red); }
+.grp-h .ic.done { background: var(--cyan); }
+.grp-h .r { margin-left: auto; font-size: 13px; color: var(--ink-3); font-weight: 400; display: flex; gap: 10px; align-items: center; }
+.grp-h .all { color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(63,230,255,.5); }
+.grp-h .all:hover { color: var(--cyan); }
+.grp-h.fold { cursor: pointer; color: var(--ink-3); }
+.row { border-bottom: 1px solid rgba(255,255,255,.06); }
+.row-main { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.cb { width: 20px; height: 20px; border-radius: 6px; flex: none; display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.32); transition: all .2s; }
+.cb svg { opacity: 0; transform: scale(.4); transition: all .2s; }
+.row.sel .cb { background: linear-gradient(135deg, var(--cyan), var(--violet)); box-shadow: 0 0 14px rgba(63,230,255,.6); }
+.row.sel .cb svg { opacity: 1; transform: none; }
+.cb:disabled { opacity: .25; }
+.row .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; font-size: 14.5px; }
+.row .t:hover { color: var(--cyan); }
+.row .src { font-size: 10.5px; padding: 1px 7px; border-radius: 999px; box-shadow: inset 0 0 0 1px currentColor; flex: none; }
+.row .src.rule { color: #9fb6ff; } .row .src.agent { color: var(--magenta); }
+.row .z { font: 400 14.5px var(--num); flex: none; color: var(--ink-2); }
+.row.pending .t, .row.pending .z { color: var(--ink-3); }
+.row.reviewing .t::after { content: "　複核中"; font-size: 11px; color: var(--cyan); animation: pulseText 1.2s ease-in-out infinite; }
+@keyframes pulseText { 50% { opacity: .35; } }
+.row.wd .t { text-decoration: line-through; text-decoration-color: rgba(255,95,122,.6); color: var(--ink-3); }
+.row.cleaned .t { color: var(--ink-3); }
+.det { display: none; padding: 0 0 12px 32px; font-size: 12.5px; color: var(--ink-2); }
+.row.open .det { display: block; animation: fade .25s ease; }
+.det .p { font: 11.5px var(--mono); color: var(--ink-3); word-break: break-all; }
+.det .why { margin-top: 5px; }
+.det .rv { margin-top: 4px; color: var(--ink-3); }
+.det .rv.ok { color: rgba(61,255,180,.85); } .det .rv.no { color: rgba(255,95,122,.85); }
+.det code { display: block; margin-top: 7px; font: 11.5px var(--mono); color: rgba(234,243,255,.62); padding: 6px 9px; border-radius: 8px; background: rgba(0,0,0,.35); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); word-break: break-all; }
+.det code::before { content: "$ "; color: var(--cyan); }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.tag { font-size: 10.5px; padding: 1px 8px; border-radius: 999px; box-shadow: inset 0 0 0 1px currentColor; }
+.tag.ok { color: var(--green); } .tag.dl { color: var(--amber); } .tag.no { color: var(--red); }
+.actions { display: flex; gap: 10px; padding-top: 14px; }
+.intro { color: var(--ink-2); font-size: 14px; margin: 16px 0 0; }
+.facts { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 9px; font-size: 13px; color: var(--ink-3); }
+.facts li { display: flex; gap: 9px; }
+.facts li::before { content: "◇"; color: var(--cyan); }
+
+/* ───────── 工作紀錄抽屜 ───────── */
+.drawer { position: fixed; top: 16px; right: 16px; bottom: 16px; width: min(480px, calc(100vw - 32px)); z-index: 12; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; transform: translateX(calc(100% + 40px)); transition: transform .5s cubic-bezier(.2,.8,.2,1); background: linear-gradient(140deg, rgba(14,20,36,.84), rgba(8,10,20,.8)); }
+.drawer.show { transform: none; }
+.dhead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.dhead h2 { margin: 0; font-size: 15px; font-weight: 500; letter-spacing: .12em; }
+.tabs { display: flex; gap: 6px; padding: 4px; border-radius: 14px; background: rgba(0,0,0,.3); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+.tab { flex: 1; padding: 8px 6px; border-radius: 10px; font-size: 13px; color: var(--ink-3); display: flex; align-items: center; justify-content: center; gap: 7px; transition: all .2s; }
+.tab.on { color: var(--ink); background: rgba(255,255,255,.08); box-shadow: inset 0 0 0 1px rgba(63,230,255,.35), 0 0 18px rgba(63,230,255,.12); }
+.term { flex: 1; margin-top: 14px; overflow-y: auto; font: 12.5px/1.65 var(--mono); padding: 14px; border-radius: 16px; background: rgba(0,0,0,.42); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), inset 0 10px 40px rgba(0,0,0,.4); scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent; }
+.log { display: none; } .log.on { display: block; }
+.l { margin: 0 0 8px; white-space: pre-wrap; word-break: break-word; animation: lineIn .3s ease both; }
+@keyframes lineIn { from { opacity: 0; transform: translateX(-6px); } }
+.l.sys { color: var(--ink-3); } .l.sys b { color: var(--cyan); font-weight: 400; }
+.l.think { color: rgba(186,170,255,.72); font-style: italic; font-family: "Noto Sans TC", sans-serif; border-left: 2px solid rgba(140,124,255,.4); padding-left: 10px; }
+.l.text { color: var(--ink); font-family: "Noto Sans TC", sans-serif; font-size: 13px; }
+.l.tool { color: var(--cyan); }
+.l.tool .tt { display: inline-block; padding: 0 6px; margin-right: 8px; border-radius: 5px; font-size: 11px; color: #021; background: var(--cyan); box-shadow: 0 0 10px rgba(63,230,255,.6); }
+.l.tool .d { display: block; color: var(--ink-3); font-size: 11.5px; font-family: "Noto Sans TC", sans-serif; }
+.l.res { color: rgba(234,243,255,.42); font-size: 11.5px; margin-top: -4px; padding-left: 14px; border-left: 1px dashed rgba(255,255,255,.12); max-height: 4.9em; overflow: hidden; }
+.l.res.err { color: rgba(255,95,122,.75); }
+.l.guard { color: var(--amber); }
+.cursor { display: inline-block; width: 8px; height: 15px; background: var(--cyan); vertical-align: -2px; box-shadow: 0 0 10px var(--cyan); animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.dfoot { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font: 12px var(--mono); color: var(--ink-3); }
+
+/* ───────── 對話框 ───────── */
+.veil { position: fixed; inset: 0; z-index: 40; display: none; place-items: center; padding: 20px; background: rgba(2,4,10,.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.veil.show { display: grid; animation: fade .25s ease; }
+@keyframes fade { from { opacity: 0; } }
+.modal { width: min(640px, 100%); max-height: 86vh; overflow-y: auto; padding: 28px; border-radius: 24px; animation: pop .4s cubic-bezier(.2,.8,.2,1); background: linear-gradient(140deg, rgba(16,22,40,.85), rgba(8,10,20,.82)); }
+@keyframes pop { from { opacity: 0; transform: translateY(16px) scale(.97); } }
+.modal h3 { margin: 0 0 8px; font-size: 20px; }
+.modal p { color: var(--ink-2); margin: 0 0 16px; }
+.cmds { display: grid; gap: 8px; margin: 16px 0 22px; }
+.cmds code { font: 12px var(--mono); color: rgba(234,243,255,.65); padding: 7px 10px; border-radius: 9px; background: rgba(0,0,0,.35); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); word-break: break-all; }
+.cmds code::before { content: "$ "; color: var(--cyan); }
+.mact { display: flex; justify-content: flex-end; gap: 10px; }
+.freed { text-align: center; padding: 6px 0 18px; }
+.freed .k { color: var(--ink-3); letter-spacing: .3em; font-size: 12px; }
+.freed .big { font: 300 76px/1 var(--num); letter-spacing: -.03em; background: linear-gradient(180deg, #fff, var(--green)); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 30px rgba(61,255,180,.35)); }
+.freed .big small { font-size: 24px; }
+.compare { display: grid; gap: 10px; margin: 16px 0; }
+.compare .bar2 { height: 10px; border-radius: 8px; background: rgba(255,255,255,.06); overflow: hidden; }
+.compare .bar2 i { display: block; height: 100%; border-radius: inherit; width: 0; transition: width 1.4s cubic-bezier(.2,.8,.2,1); }
+.compare .k2 { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-3); margin-bottom: 4px; }
+.dlist { display: grid; gap: 6px; margin-top: 10px; }
+.drow { display: grid; grid-template-columns: 1fr auto; gap: 12px; font: 12.5px var(--mono); padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,.03); position: relative; overflow: hidden; isolation: isolate; }
+.drow i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, rgba(63,230,255,.18), rgba(140,124,255,.04)); z-index: -1; }
+.drow span { word-break: break-all; color: var(--ink-2); }
+.drow b { font-family: var(--num); font-weight: 500; }
+.toast { position: fixed; top: 26px; left: 50%; transform: translate(-50%, -160%); z-index: 60; padding: 12px 20px; border-radius: 14px; font-size: 14px; transition: transform .4s cubic-bezier(.2,.8,.2,1); background: linear-gradient(140deg, rgba(16,22,40,.9), rgba(8,10,20,.88)); }
+.toast.show { transform: translate(-50%, 0); }
+
+@media (max-width: 980px) {
+  body { overflow: auto; }
+  .win { position: relative; inset: auto; margin: 12px; min-height: calc(100vh - 24px); }
+  .steps { display: none; }
+  .stage { display: flex; flex-direction: column-reverse; }
+  .panel { position: relative; left: auto; top: auto; width: auto; height: auto; padding: 18px 16px 8px; }
+  .list { max-height: 420px; }
+  .mapArea { position: relative; inset: auto; height: 560px; margin: 0 8px 12px; }
+  .mapEmpty { padding-left: 0; }
+  .hero .big { font-size: 68px; }
+}
+@media (max-width: 560px) {
+  .bar { flex-wrap: wrap; padding: 12px 14px; }
+  .bar-right { width: 100%; justify-content: space-between; }
+  .chip.hide-sm { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="bg"><div class="aurora a1"></div><div class="aurora a2"></div><div class="aurora a3"></div><div class="gridbg"></div><div class="beam b1"></div><div class="beam b2"></div><div class="beam b3"></div><div class="noise"></div></div>
+
+<div class="win glass">
+  <header class="bar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 42 42" aria-hidden="true">
+        <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3fe6ff"/><stop offset=".6" stop-color="#8c7cff"/><stop offset="1" stop-color="#ff5bd3"/></linearGradient></defs>
+        <circle cx="21" cy="21" r="18" fill="none" stroke="rgba(255,255,255,.12)"/>
+        <g class="ring"><circle cx="21" cy="21" r="18" fill="none" stroke="url(#lg)" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="40 74"/></g>
+        <circle cx="21" cy="21" r="9" fill="none" stroke="url(#lg)" stroke-width="1.2" opacity=".7"/>
+        <circle cx="21" cy="21" r="3.2" fill="#3fe6ff"><animate attributeName="opacity" values="1;.35;1" dur="2s" repeatCount="indefinite"/></circle>
+      </svg>
+      <div><h1>VOIDSCAN</h1><small>磁碟指揮中心</small></div>
+    </div>
+    <div class="steps" id="steps"></div>
+    <div class="bar-right">
+      <span class="chip hide-sm"><span class="dot" id="connDot"></span><span id="connText">連線中</span></span>
+      <span class="chip hide-sm">🛡 Agent 唯讀沙盒</span>
+      <button class="tbtn" id="logBtn"><span class="dot idle" id="logDot"></span>工作紀錄</button>
+      <button class="tbtn" id="rescanBtn">重新掃描</button>
+    </div>
+  </header>
+
+  <div class="stage" id="stage">
+    <div class="mapArea" id="mapArea">
+      <svg id="mapSvg" aria-label="磁碟空間地圖">
+        <defs>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".35" stop-color="#fff" stop-opacity=".03"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+          <pattern id="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="9" height="9" fill="rgba(255,196,85,.05)"/><rect width="3.5" height="9" fill="rgba(255,196,85,.16)"/></pattern>
+        </defs>
+        <g id="gradDefs"></g>
+        <g id="lots"></g>
+      </svg>
+      <div class="labels" id="labels"></div>
+      <div class="mapEmpty" id="mapEmpty"><div class="radar"></div></div>
+    </div>
+    <aside class="panel" id="panel"></aside>
+  </div>
+</div>
+
+<aside class="drawer glass" id="drawer">
+  <div class="dhead"><h2>工作紀錄</h2><div style="display:flex;gap:8px"><button class="tbtn" id="stopBtn" disabled>停止 Agent</button><button class="tbtn" id="closeDrawer">關閉</button></div></div>
+  <div class="tabs" id="tabs">
+    <button class="tab on" data-lane="scan"><span class="dot idle"></span>掃描</button>
+    <button class="tab" data-lane="review"><span class="dot idle"></span>複核</button>
+    <button class="tab" data-lane="clean"><span class="dot idle"></span>清理</button>
+  </div>
+  <div class="term" id="term">
+    <div class="log on" data-lane="scan"></div>
+    <div class="log" data-lane="review"></div>
+    <div class="log" data-lane="clean"></div>
+  </div>
+  <div class="dfoot"><span id="laneMeta">待命</span><span id="tokenMeta"></span></div>
+</aside>
+
+<div class="veil" id="confirmVeil"><div class="modal glass">
+  <h3 id="confirmTitle"></h3><p id="confirmDesc"></p><div class="cmds" id="confirmCmds"></div>
+  <div class="mact"><button class="btn" data-close>取消</button><button class="btn primary" id="confirmGo">確認清理</button></div>
+</div></div>
+
+<div class="veil" id="resultVeil"><div class="modal glass">
+  <div class="freed"><div class="k">實際釋放</div><div class="big" id="freedBig">0</div></div>
+  <div class="compare" id="compare"></div>
+  <div class="dlist" id="resultList"></div>
+  <div class="mact" style="margin-top:20px"><button class="btn primary" data-close>完成</button></div>
+</div></div>
+
+<div class="veil" id="drillVeil"><div class="modal glass">
+  <h3 id="drillTitle"></h3><p id="drillSub"></p><div class="dlist" id="drillList"></div>
+  <div class="mact" style="margin-top:20px"><button class="btn" data-close>關閉</button></div>
+</div></div>
+
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const GB = 1024 ** 3;
+const g1 = (b) => (b / GB).toFixed(1);
+const human = (b) => b >= GB ? `${(b / GB).toFixed(1)} G` : b <= 0 ? "0 M" : `${Math.max(1, Math.round(b / 1024 ** 2))} M`;
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const hash = (s) => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; };
+
+const S = {
+  disk: null, categories: [], suggestions: new Map(), selected: new Set(), open: new Set(),
+  phase: "idle", cleaning: false, cleanStage: "", lanes: {}, lastClean: null,
+  fold: { wd: true, done: true, pend: false }, activity: "", measuringLabel: "", measuring: new Set(),
+  layout: new Map(), layoutSize: "", activeLane: "scan", drawerByUser: false, cells: new Map(),
+};
+const HUES = { syspkg: 95, projects: 120, apps: 205, ai: 268, dev: 186, browser: 222, cache: 300, appdata: 244, vault: 160, downloads: 32, media: 340, system: 215, swap: 42, free: 150 };
+const SAFE = new Set(["可自動重建", "可重新下載"]);
+const selectable = (s) => s.review === "approved" && s.status === "ready";
+const group = (s) => {
+  if (s.status === "cleaned") return "done";
+  if (s.review === "withdrawn" || s.status === "skipped") return "wd";
+  if (s.review === "approved") return SAFE.has(s.recover) ? "safe" : "conf";
+  return "pend";
+};
+
+// ═════════ 加權 Voronoi 地圖（商場平面圖排法） ═════════
+function clip(poly, ax, ay, b) {
+  const out = [], n = poly.length;
+  for (let i = 0; i < n; i++) {
+    const P = poly[i], Q = poly[(i + 1) % n];
+    const dp = ax * P[0] + ay * P[1] - b, dq = ax * Q[0] + ay * Q[1] - b;
+    if (dp <= 0) out.push(P);
+    if ((dp <= 0) !== (dq <= 0)) { const t = dp / (dp - dq); out.push([P[0] + t * (Q[0] - P[0]), P[1] + t * (Q[1] - P[1])]); }
+  }
+  return out;
+}
+function area(p) { let a = 0; for (let i = 0; i < p.length; i++) { const [x1, y1] = p[i], [x2, y2] = p[(i + 1) % p.length]; a += x1 * y2 - x2 * y1; } return Math.abs(a) / 2; }
+function centroid(p) {
+  let a = 0, cx = 0, cy = 0;
+  for (let i = 0; i < p.length; i++) { const [x1, y1] = p[i], [x2, y2] = p[(i + 1) % p.length]; const f = x1 * y2 - x2 * y1; a += f; cx += (x1 + x2) * f; cy += (y1 + y2) * f; }
+  if (Math.abs(a) < 1e-9) return p[0] || [0, 0];
+  return [cx / (3 * a), cy / (3 * a)];
+}
+function powerCells(sites, rect) {
+  return sites.map((si, i) => {
+    let poly = rect;
+    for (let j = 0; j < sites.length && poly.length >= 3; j++) {
+      if (j === i) continue;
+      const sj = sites[j];
+      poly = clip(poly, 2 * (sj.x - si.x), 2 * (sj.y - si.y), sj.x * sj.x + sj.y * sj.y - si.x * si.x - si.y * si.y - sj.w + si.w);
+    }
+    return poly;
+  });
+}
+function squarify(items, x, y, w, h) {
+  const out = [], total = items.reduce((a, b) => a + b.value, 0);
+  if (!total) return out;
+  let nodes = items.map((it) => ({ ...it, area: (it.value * w * h) / total }));
+  const worst = (row, len) => { const s = row.reduce((a, b) => a + b.area, 0), mx = Math.max(...row.map((r) => r.area)), mn = Math.min(...row.map((r) => r.area)); return Math.max((len * len * mx) / (s * s), (s * s) / (len * len * mn)); };
+  while (nodes.length) {
+    const len = Math.min(w, h); let row = [nodes[0]], i = 1;
+    while (i < nodes.length && worst([...row, nodes[i]], len) <= worst(row, len)) row.push(nodes[i++]);
+    nodes = nodes.slice(i);
+    const s = row.reduce((a, b) => a + b.area, 0);
+    if (w >= h) { const cw = s / h; let cy = y; for (const r of row) { const ch = r.area / cw; out.push({ ...r, cx: x + cw / 2, cy: cy + ch / 2 }); cy += ch; } x += cw; w -= cw; }
+    else { const ch = s / w; let cx = x; for (const r of row) { const cw = r.area / ch; out.push({ ...r, cx: cx + cw / 2, cy: y + ch / 2 }); cx += cw; } y += ch; h -= ch; }
+  }
+  return out;
+}
+function voronoiLayout(items, W, H, hole) {
+  const rect = [[0, 0], [W, 0], [W, H], [0, H]];
+  const total = W * H;
+  const holeArea = hole ? hole.w * hole.h * 1.08 : 0;
+  const sum = items.reduce((a, b) => a + b.value, 0) || 1;
+  const all = hole ? [...items, { id: "__hole", value: 0 }] : items;
+  const key = `${W}x${H}`;
+  const warm = S.layoutSize === key && all.every((it) => S.layout.has(it.id));
+  let seeds;
+  if (warm) seeds = all.map((it) => ({ ...S.layout.get(it.id) }));
+  else {
+    // 先用方塊排法找起點，再讓每一塊長成多邊形
+    const x0 = hole ? hole.w * 0.6 : 0;
+    const placed = squarify(items.slice().sort((a, b) => b.value - a.value), x0, 0, W - x0, H);
+    const pos = new Map(placed.map((p) => [p.id, p]));
+    seeds = all.map((it) => {
+      if (it.id === "__hole") return { x: hole.x + hole.w / 2, y: hole.y + hole.h / 2, w: 0 };
+      const prev = S.layout.get(it.id);
+      if (prev && S.layoutSize === key) return { ...prev };
+      const p = pos.get(it.id), j = (hash(it.id) - .5) * 10;
+      return { x: p.cx + j, y: p.cy - j, w: 0 };
+    });
+  }
+  const targets = all.map((it) => it.id === "__hole" ? holeArea : (it.value / sum) * (total - holeArea));
+  const iters = warm ? 60 : 260;
+  let cells = [];
+  for (let k = 0; k < iters; k++) {
+    cells = powerCells(seeds, rect);
+    seeds.forEach((s, i) => {
+      const A = area(cells[i]);
+      if (A < 1) { s.w = 0; s.x = W * (.35 + hash(all[i].id + k) * .6); s.y = H * (.1 + hash(all[i].id + "y" + k) * .8); return; }
+      if (all[i].id !== "__hole") { const c = centroid(cells[i]); s.x = c[0]; s.y = c[1]; }
+      let r = Math.sqrt(Math.max(s.w, 0)) || Math.sqrt(targets[i] / Math.PI) * .25;
+      r *= Math.min(1.14, Math.max(.88, Math.sqrt(targets[i] / A)));
+      s.w = r * r;
+    });
+    for (let pass = 0; pass < 2; pass++) for (let i = 0; i < seeds.length; i++) for (let j = 0; j < seeds.length; j++) {
+      if (i === j) continue;
+      const d2 = (seeds[i].x - seeds[j].x) ** 2 + (seeds[i].y - seeds[j].y) ** 2;
+      if (seeds[i].w > seeds[j].w + d2 * .96) seeds[i].w = seeds[j].w + d2 * .96;
+    }
+  }
+  cells = powerCells(seeds, rect);
+  S.layout = new Map(all.map((it, i) => [it.id, seeds[i]]));
+  S.layoutSize = key;
+  const out = [];
+  all.forEach((it, i) => {
+    if (it.id === "__hole") return;
+    let poly = cells[i];
+    if (hole && poly.length >= 3) {
+      // 避開左上面板：保留右邊或下面比較大的那一塊
+      const gx = hole.x + hole.w, gy = hole.y + hole.h;
+      if (poly.some(([x, y]) => x < gx - 1 && y < gy - 1)) {
+        const right = clip(poly, -1, 0, -gx), below = clip(poly, 0, -1, -gy);
+        poly = area(right) >= area(below) ? right : below;
+      }
+    }
+    if (poly.length >= 3) out.push({ ...it, poly });
+  });
+  return out;
+}
+function inset(poly, d) {
+  const c = centroid(poly); let out = poly;
+  for (let i = 0; i < poly.length && out.length >= 3; i++) {
+    const P = poly[i], Q = poly[(i + 1) % poly.length];
+    let nx = Q[1] - P[1], ny = P[0] - Q[0];
+    const len = Math.hypot(nx, ny); if (len < 1e-6) continue;
+    nx /= len; ny /= len;
+    if (nx * (c[0] - P[0]) + ny * (c[1] - P[1]) < 0) { nx = -nx; ny = -ny; }
+    out = clip(out, -nx, -ny, -(nx * P[0] + ny * P[1] + d));
+  }
+  return out;
+}
+function rounded(poly, r) {
+  const pts0 = poly.filter((P, i) => { const Q = poly[(i + 1) % poly.length]; return Math.hypot(Q[0] - P[0], Q[1] - P[1]) > .5; });
+  const n = pts0.length; if (n < 3) return "";
+  const pts = pts0.map((P, i) => {
+    const A = pts0[(i - 1 + n) % n], B = pts0[(i + 1) % n];
+    const d1 = Math.hypot(A[0] - P[0], A[1] - P[1]), d2 = Math.hypot(B[0] - P[0], B[1] - P[1]);
+    const rr = Math.min(r, d1 * .42, d2 * .42);
+    return { a: [P[0] + (A[0] - P[0]) / d1 * rr, P[1] + (A[1] - P[1]) / d1 * rr], P, b: [P[0] + (B[0] - P[0]) / d2 * rr, P[1] + (B[1] - P[1]) / d2 * rr] };
+  });
+  const f = (p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`;
+  return pts.map((p, i) => `${i ? "L" : "M"}${f(p.a)}Q${f(p.P)} ${f(p.b)}`).join("") + "Z";
+}
+function perimeter(p) { let s = 0; for (let i = 0; i < p.length; i++) { const A = p[i], B = p[(i + 1) % p.length]; s += Math.hypot(B[0] - A[0], B[1] - A[1]); } return s; }
+
+function categoryOf(path) {
+  let best = null, len = -1;
+  for (const c of S.categories) for (const p of c.paths || []) {
+    if ((path === p || path.startsWith(p + "/")) && p.length > len) { best = c.id; len = p.length; }
+  }
+  return best || "system";
+}
+function mapItems() {
+  const cats = new Map(S.categories.map((c) => [c.id, { ...c }]));
+  const sugs = [...S.suggestions.values()].filter((s) => ["safe", "conf", "pend"].includes(group(s))).sort((a, b) => b.bytes - a.bytes);
+  for (const s of sugs) { const c = cats.get(categoryOf(s.path)); if (c) c.bytes = Math.max(0, c.bytes - s.bytes); }
+  const items = [...cats.values()].filter((c) => c.bytes > 0).map((c) => ({ id: c.id, kind: "cat", cat: c, label: c.label, bytes: c.bytes }));
+  const solo = sugs.slice(0, 12), rest = sugs.slice(12);
+  for (const s of solo) items.push({ id: "s:" + s.id, kind: "sug", sug: s, label: s.title, bytes: s.bytes });
+  if (rest.length) items.push({ id: "s:rest", kind: "rest", label: `其他建議 ${rest.length} 項`, bytes: rest.reduce((a, s) => a + s.bytes, 0), rest });
+  const total = items.reduce((a, b) => a + b.bytes, 0) || 1;
+  return items.map((it) => ({ ...it, value: Math.max(it.bytes, total * (it.kind === "cat" ? .014 : .008)) }));
+}
+function hueOf(it) {
+  if (it.kind === "cat") return HUES[it.id] ?? 210;
+  if (it.kind === "rest") return 200;
+  const g = group(it.sug);
+  return g === "safe" ? 168 : g === "conf" ? 40 : 210;
+}
+
+let mapTimer = null;
+function renderMap() { clearTimeout(mapTimer); mapTimer = setTimeout(drawMap, 60); }
+function drawMap() {
+  const box = $("#mapArea"), W = box.clientWidth, H = box.clientHeight;
+  const items = mapItems();
+  $("#mapEmpty").style.display = items.length ? "none" : "grid";
+  if (!items.length || !W || !H) { $("#lots").innerHTML = ""; $("#labels").innerHTML = ""; return; }
+  let hole = null;
+  if (innerWidth > 980) { const pr = $("#panel").getBoundingClientRect(), ar = box.getBoundingClientRect(); hole = { x: 0, y: 0, w: pr.right - ar.left + 14, h: pr.bottom - ar.top + 14 }; }
+  const cells = voronoiLayout(items, W, H, hole);
+  const now = performance.now() / 1000;
+  let defs = "", svg = "", labels = "";
+  for (const c of cells) {
+    const poly = inset(c.poly, 5);
+    if (poly.length < 3 || area(poly) < 80) continue;
+    const h = hueOf(c), d = rounded(poly, 26), A = area(poly), per = perimeter(poly);
+    const isFree = c.id === "free", isSwap = c.id === "swap";
+    const sug = c.kind === "sug" ? c.sug : null;
+    const sel = sug && S.selected.has(sug.id);
+    const pend = sug && group(sug) === "pend";
+    const gid = "gr-" + c.id.replace(/[^a-z0-9]/gi, "");
+    const a1 = isFree ? .06 : pend ? .12 : sug ? .42 : .30, a2 = isFree ? .015 : sug ? .10 : .06;
+    defs += `<linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${h} 95% 62%)" stop-opacity="${a1}"/><stop offset="1" stop-color="hsl(${h} 90% 46%)" stop-opacity="${a2}"/></linearGradient>`;
+    const dur = Math.max(4, Math.min(14, per / 70)), dl = -((now + hash(c.id) * dur) % dur);
+    const cls = ["lot", sel ? "sel" : "", S.measuring.has(c.id) ? "measuring" : "", c.id === "system" ? "dashed" : ""].join(" ");
+    const edge = isFree ? "rgba(61,255,180,.55)" : sel ? "hsl(190 100% 72%)" : `hsla(${h},100%,74%,${pend ? .32 : .55})`;
+    let extra = "";
+    if (isFree || sel) {
+      // 等高線：一圈圈內縮，光沿著線流動
+      let ring = poly, k = 0;
+      const step = isFree ? 11 : 7, maxRings = isFree ? 40 : 3;
+      while (k < maxRings) {
+        ring = inset(ring, step); if (ring.length < 3 || area(ring) < (isFree ? 900 : 300)) break;
+        const rd = rounded(ring, Math.max(6, 22 - k * 1.2)), rdur = 6 + (k % 5) * 1.7;
+        extra += `<path class="ring" d="${rd}" stroke="${isFree ? `rgba(61,255,180,${Math.max(.08, .32 - k * .012)})` : "rgba(63,230,255,.6)"}"/>`;
+        if (!isFree || k % 2 === 0) extra += `<path class="ringflow ${k % 4 === 2 ? "rev" : ""}" d="${rd}" pathLength="100" stroke="${isFree ? "rgba(140,255,210,.95)" : "#bff6ff"}" style="--t:${rdur}s;--dl:${-((now + k * 1.3) % rdur)}s"/>`;
+        k++;
+      }
+    }
+    svg += `<g class="${cls}" data-id="${esc(c.id)}"><path class="fill" d="${d}" fill="${isSwap ? "url(#hatch)" : `url(#${gid})`}"/><path class="sheen" d="${d}"/>${extra}<path class="edge" d="${d}" stroke="${edge}"/><path class="flow" d="${d}" pathLength="100" stroke="hsl(${isFree ? 155 : h} 100% 82%)" style="--t:${dur}s;--dl:${dl}s"/></g>`;
+    const [cx, cy] = centroid(poly), side = Math.sqrt(A);
+    const xs = poly.map((p) => p[0]), wspan = Math.max(...xs) - Math.min(...xs);
+    const marker = sug ? (group(sug) === "safe" ? "●" : group(sug) === "conf" ? "◐" : "○") : "";
+    if (side < 56) { if (marker) labels += `<div class="lab" style="left:${cx}px;top:${cy}px"><span class="m" style="color:hsl(${h} 100% 75%)">${marker}</span></div>`; continue; }
+    const fs = Math.max(12, Math.min(24, side / 8.5)), ns = Math.max(11, Math.min(16, side / 12.5));
+    const maxw = Math.max(44, Math.min(wspan * .78, side * 1.15));
+    const name = (marker ? `<span style="color:hsl(${h} 100% 72%);margin-right:5px">${marker}</span>` : "") + esc(c.label);
+    labels += `<div class="lab ${isFree ? "free" : ""}" style="left:${cx}px;top:${cy}px"><div class="n" style="font-size:${ns}px;max-width:${maxw}px">${name}</div><div class="s" style="font-size:${fs}px">${c.bytes >= GB ? g1(c.bytes) + " G" : human(c.bytes)}</div></div>`;
+  }
+  $("#gradDefs").innerHTML = defs;
+  $("#lots").innerHTML = svg;
+  $("#labels").innerHTML = labels;
+  S.cells = new Map(cells.map((c) => [c.id, c]));
+}
+new ResizeObserver(() => renderMap()).observe($("#mapArea"));
+document.fonts?.ready.then(() => renderMap());
+
+// 地圖互動
+const tip = $("#tip");
+$("#lots").addEventListener("mousemove", (e) => {
+  const g = e.target.closest(".lot"); if (!g) return;
+  const c = S.cells.get(g.dataset.id); if (!c) return;
+  let body = "";
+  if (c.kind === "sug") {
+    const s = c.sug;
+    body = `<div class="p">${esc(s.display)}</div><div class="r">${esc(s.reason)}</div><div class="r" style="color:var(--ink-3)">${selectable(s) ? (S.selected.has(s.id) ? "點一下取消選取" : "點一下選取") : s.review === "reviewing" ? "複核中" : "等待複核"}</div>`;
+  } else if (c.kind === "rest") body = `<div class="r">${c.rest.slice(0, 6).map((s) => esc(s.title)).join("、")}${c.rest.length > 6 ? "⋯" : ""}</div>`;
+  else body = `<div class="r">${esc(c.cat.note || "點一下看裡面有什麼")}</div>`;
+  tip.innerHTML = `<b>${esc(c.label)} · ${human(c.bytes)}</b>${body}`;
+  tip.classList.add("show");
+  tip.style.left = Math.min(e.clientX + 16, innerWidth - 340) + "px";
+  tip.style.top = Math.min(e.clientY + 16, innerHeight - tip.offsetHeight - 10) + "px";
+});
+$("#lots").addEventListener("mouseleave", () => tip.classList.remove("show"));
+$("#lots").addEventListener("click", (e) => {
+  const g = e.target.closest(".lot"); if (!g) return;
+  const c = S.cells.get(g.dataset.id); if (!c) return;
+  if (c.kind === "sug") { if (selectable(c.sug)) toggle(c.sug.id); else { S.open.add(c.sug.id); renderPanel(); } }
+  else if (c.kind === "cat") openDrill(c.cat);
+});
+
+async function openDrill(cat) {
+  $("#drillTitle").textContent = `${cat.label} · ${human(cat.bytes)}`;
+  $("#drillList").innerHTML = "";
+  if (!cat.paths) { $("#drillSub").textContent = cat.note || (cat.id === "free" ? "目前可以使用的空間" : ""); show("#drillVeil"); return; }
+  $("#drillSub").textContent = "正在測量裡面的子資料夾⋯";
+  show("#drillVeil");
+  const { rows } = await fetch(`/api/drill?id=${cat.id}`).then((r) => r.json());
+  const max = rows[0]?.bytes || 1;
+  $("#drillSub").textContent = rows.length ? "佔用最多的位置" : "沒有可以顯示的內容（可能需要完整磁碟取用權限）";
+  $("#drillList").innerHTML = rows.map((r) => `<div class="drow"><i style="width:${(r.bytes / max) * 100}%"></i><span>${esc(r.path)}</span><b>${human(r.bytes)}</b></div>`).join("");
+}
+
+// ═════════ 左上面板 ═════════
+function toggle(id) { S.selected.has(id) ? S.selected.delete(id) : S.selected.add(id); renderPanel(); renderMap(); }
+const sumBytes = (list) => list.reduce((a, s) => a + s.bytes, 0);
+const busy = () => S.phase !== "idle" || S.cleaning || Object.values(S.lanes).includes("running");
+function statusText() {
+  if (S.cleaning) return S.cleanStage === "measure" ? "清理完成，重新測量中" : S.lanes.clean === "running" ? `清理 Agent：${S.activity || "逐項確認中"}` : "正在清理所選項目";
+  if (S.phase === "quick") return `規則測量中：${S.measuringLabel || "磁碟"}`;
+  if (S.lanes.scan === "running") return `掃描 Agent：${S.activity || "查看規則列不全的部分"}`;
+  if (S.lanes.review === "running") { const n = [...S.suggestions.values()].filter((s) => s.review === "reviewing").length; return `複核 Agent 正在獨立檢查 ${n} 條建議`; }
+  return "";
+}
+function rowHtml(s) {
+  const g = group(s), sel = S.selected.has(s.id);
+  const rec = SAFE.has(s.recover) ? (s.recover === "可自動重建" ? "ok" : "dl") : "no";
+  return `<div class="row ${sel ? "sel" : ""} ${S.open.has(s.id) ? "open" : ""} ${g === "pend" ? "pending" : ""} ${s.review === "reviewing" ? "reviewing" : ""} ${g === "wd" ? "wd" : ""} ${g === "done" ? "cleaned" : ""}" data-id="${s.id}">
+    <div class="row-main">
+      <button class="cb" ${selectable(s) ? "" : "disabled"} aria-label="選取 ${esc(s.title)}"><svg width="12" height="12" viewBox="0 0 14 14"><path d="M2.5 7.5l3 3 6-7" fill="none" stroke="#021" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <span class="t">${esc(s.title)}</span><span class="src ${s.source}">${s.source === "rule" ? "規則" : "Agent"}</span>
+      <span class="z">${s.status === "cleaned" && s.freed ? human(s.freed) : human(s.bytes)}</span>
+    </div>
+    <div class="det">
+      <div class="p">${esc(s.display)}</div>
+      <div class="why">${esc(s.what ? s.what + "。" : "")}${esc(s.reason)}</div>
+      <div class="tags"><span class="tag ${rec}">${esc(s.recover)}</span>${s.app ? `<span class="tag" style="color:var(--ink-3)">相關 App：${esc(s.app)}</span>` : ""}</div>
+      ${s.reviewNote ? `<div class="rv ${s.review === "approved" ? "ok" : "no"}">${s.review === "approved" ? "✓ 複核：" : "✕ "}${esc(s.reviewNote)}</div>` : ""}
+      ${s.result ? `<div class="rv">→ ${esc(s.result)}</div>` : ""}
+      <code>${esc(s.command)}</code>
+    </div>
+  </div>`;
+}
+function renderPanel() {
+  for (const id of [...S.selected]) { const s = S.suggestions.get(id); if (!s || !selectable(s)) S.selected.delete(id); }
+  const panel = $("#panel");
+  const scrollTop = $("#list")?.scrollTop || 0;
+  const all = [...S.suggestions.values()].sort((a, b) => b.bytes - a.bytes);
+  const by = { safe: [], conf: [], pend: [], wd: [], done: [] };
+  for (const s of all) by[group(s)].push(s);
+  const selList = [...S.selected].map((id) => S.suggestions.get(id));
+  const selBytes = sumBytes(selList), free = S.disk?.free || 0;
+  const st = statusText();
+  const statusHtml = `<div class="status" id="statusLine">${st ? `<span class="spin"></span><span>${esc(st)}</span>` : ""}</div>`;
+
+  if (!S.categories.length && !all.length) {
+    panel.innerHTML = `
+      <div class="hero"><span><span class="big">${S.disk ? g1(free) : "--"}</span><span class="g">G</span></span><span class="cap">目前可用${S.disk ? `（共 ${g1(S.disk.total)} G）` : ""}</span></div>
+      <p class="intro">規則大約一分鐘量完常見位置，掃描 Agent 查規則列不全的部分，複核 Agent 再獨立檢查每一條建議。不會替你勾選任何一項，在你確認之前，什麼都不會被刪除。</p>
+      ${statusHtml}
+      <ul class="facts"><li>Agent 只能讀，macOS 沙盒在核心層級拒絕它們的寫入和刪除</li><li>只有 VOIDSCAN 能刪除，而且要經過你確認；文件、照片、金鑰一律拒絕</li><li>Agent 用的是你自己的 Claude 帳號</li></ul>
+      <div class="actions" style="margin-top:auto"><button class="btn primary" id="startBtn" ${busy() ? "disabled" : ""}>開始掃描</button><button class="btn" id="quickBtn" ${busy() ? "disabled" : ""}>只跑規則</button></div>`;
+  } else {
+    const okBytes = sumBytes(by.safe) + sumBytes(by.conf), safeBytes = sumBytes(by.safe);
+    const summary = okBytes ? `可以清理 <em>${human(okBytes)}</em>，其中 <em>${human(safeBytes)}</em> 可以放心刪除。`
+      : by.pend.length ? `找到 ${by.pend.length} 條建議，複核通過就能清理。` : S.lastClean ? `這一輪已經清完，釋放 <em>${human(S.lastClean.freed)}</em>。` : busy() ? "正在找可以清的空間⋯" : "沒有找到可以安全清理的項目。";
+    const grp = (key, title, list, icon, opts = {}) => {
+      if (!list.length) return "";
+      const sel = list.filter((s) => S.selected.has(s.id));
+      const right = opts.selectable ? `<span>已選取 ${human(sumBytes(sel))} / ${human(sumBytes(list))}</span><button class="all" data-all="${key}">${sel.length === list.length ? "取消" : "全選"}</button>` : `<span>${list.length} 項 · ${human(sumBytes(list))}</span>`;
+      const folded = opts.fold && S.fold[key];
+      return `<div class="grp"><div class="grp-h ${opts.fold ? "fold" : ""}" ${opts.fold ? `data-fold="${key}"` : ""}><span class="ic ${icon}"></span>${title}${opts.fold ? (folded ? "　›" : "　⌄") : ""}<span class="r">${right}</span></div>${folded ? "" : list.map(rowHtml).join("")}</div>`;
+    };
+    panel.innerHTML = `
+      <div class="hero"><span><span class="big">${g1(free + selBytes)}</span><span class="g">G</span></span><span class="cap">${selBytes ? `清理所選項目後可用（現在 ${g1(free)} G）` : `目前可用（共 ${S.disk ? g1(S.disk.total) : "--"} G）`}</span></div>
+      <div class="summary">${summary}</div>
+      ${statusHtml}
+      <div class="list" id="list">
+        ${grp("safe", "可安全清理", by.safe, "safe", { selectable: true })}
+        ${grp("conf", "確認後清理", by.conf, "conf", { selectable: true })}
+        ${grp("pend", "等待複核", by.pend, "pend", { fold: true })}
+        ${grp("wd", "已撤回", by.wd, "wd", { fold: true })}
+        ${grp("done", "已清理", by.done, "done", { fold: true })}
+      </div>
+      <div class="actions"><button class="btn primary" id="agentBtn" ${selList.length && !S.cleaning ? "" : "disabled"}>讓 Agent 清理${selList.length ? ` ${selList.length} 項` : ""}</button><button class="btn" id="directBtn" ${selList.length && !S.cleaning ? "" : "disabled"}>直接清理</button></div>`;
+    const list = $("#list"); if (list) list.scrollTop = scrollTop;
+  }
+  renderSteps(); renderTop();
+}
+$("#panel").addEventListener("click", (e) => {
+  const t = e.target;
+  if (t.closest("#startBtn")) return startScan(true);
+  if (t.closest("#quickBtn")) return startScan(false);
+  if (t.closest("#agentBtn")) return openConfirm("agent");
+  if (t.closest("#directBtn")) return openConfirm("direct");
+  if (t.closest("#statusLine")) return openDrawer(true);
+  const all = t.closest("[data-all]");
+  if (all) {
+    const list = [...S.suggestions.values()].filter((s) => group(s) === all.dataset.all);
+    const every = list.every((s) => S.selected.has(s.id));
+    list.forEach((s) => every ? S.selected.delete(s.id) : S.selected.add(s.id));
+    renderPanel(); renderMap(); return;
+  }
+  const fold = t.closest("[data-fold]");
+  if (fold) { S.fold[fold.dataset.fold] = !S.fold[fold.dataset.fold]; renderPanel(); return; }
+  const row = t.closest(".row"); if (!row) return;
+  const id = row.dataset.id;
+  if (t.closest(".cb")) { if (!t.closest(".cb").disabled) toggle(id); return; }
+  if (t.closest(".t")) { S.open.has(id) ? S.open.delete(id) : S.open.add(id); renderPanel(); }
+});
+
+// ═════════ 頂列 ═════════
+const STEPS = [["測量", "quick"], ["規則", "rules"], ["Agent 深掃", "scan"], ["複核", "review"], ["清理", "clean"], ["重新測量", "measure"]];
+function renderSteps() {
+  const st = {}, has = S.categories.length > 0;
+  if (S.phase === "quick") { st.quick = has ? "done" : "on"; st.rules = has ? "on" : ""; } else if (has) st.quick = st.rules = "done";
+  st.scan = S.lanes.scan === "running" ? "on" : S.lanes.scan === "done" ? "done" : "";
+  st.review = S.lanes.review === "running" ? "on" : (S.lanes.review === "done" && S.lanes.scan !== "running") ? "done" : "";
+  if (S.lastClean) st.clean = st.measure = "done";
+  if (S.cleaning) { st.clean = S.cleanStage === "measure" ? "done" : "on"; st.measure = S.cleanStage === "measure" ? "on" : ""; }
+  $("#steps").innerHTML = STEPS.map(([label, k], i) => {
+    const next = STEPS[i + 1]?.[1];
+    const link = next ? `<span class="link ${st[k] === "done" && st[next] ? "done" : ""} ${st[k] === "on" || st[next] === "on" ? "live" : ""}"></span>` : "";
+    return `<span class="step ${st[k] || ""}"><i></i>${label}</span>${link}`;
+  }).join("");
+}
+function renderTop() {
+  $("#rescanBtn").disabled = busy();
+  $("#logDot").className = "dot " + (Object.values(S.lanes).includes("running") ? "run" : S.lanes.scan ? "" : "idle");
+}
+$("#rescanBtn").addEventListener("click", () => startScan(true));
+$("#logBtn").addEventListener("click", () => { S.drawerByUser = true; openDrawer(!$("#drawer").classList.contains("show")); });
+$("#closeDrawer").addEventListener("click", () => { S.drawerByUser = true; openDrawer(false); });
+function openDrawer(on) { $("#drawer").classList.toggle("show", on); $("#logBtn").classList.toggle("on", on); if (on) autoscroll(S.activeLane, true); }
+async function startScan(agent) {
+  const r = await fetch("/api/scan", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ agent }) });
+  if (!r.ok) toast((await r.json()).error || "無法開始掃描");
+}
+$("#stopBtn").addEventListener("click", () => fetch("/api/stop", { method: "POST" }));
+
+// ═════════ 工作紀錄 ═════════
+const termState = { scan: {}, review: {}, clean: {} };
+const laneStart = {}, laneTokens = {};
+const laneLog = (lane) => $(`.log[data-lane="${lane}"]`);
+function appendLine(lane, cls, html) {
+  const el = document.createElement("div");
+  el.className = "l " + cls; el.innerHTML = html;
+  laneLog(lane).appendChild(el);
+  termState[lane] = {};
+  autoscroll(lane);
+}
+function streamText(lane, kind, text) {
+  const t = termState[lane];
+  if (!t.block || t.kind !== kind) { t.block = document.createElement("div"); t.block.className = "l " + kind; t.kind = kind; laneLog(lane).appendChild(t.block); }
+  t.block.textContent += text;
+  autoscroll(lane);
+}
+function autoscroll(lane, force) { if (lane !== S.activeLane && !force) return; const term = $("#term"); term.scrollTop = term.scrollHeight; }
+function setTab(lane) {
+  S.activeLane = lane;
+  $$(".tab").forEach((t) => t.classList.toggle("on", t.dataset.lane === lane));
+  $$(".log").forEach((l) => l.classList.toggle("on", l.dataset.lane === lane));
+  autoscroll(lane, true); renderLaneMeta();
+}
+$$(".tab").forEach((t) => t.addEventListener("click", () => setTab(t.dataset.lane)));
+const NAMES = { scan: "掃描 Agent", review: "複核 Agent", clean: "清理 Agent" };
+function renderLaneMeta() {
+  const lane = S.activeLane, st = S.lanes[lane];
+  if (st === "running") { const sec = Math.round((Date.now() - (laneStart[lane] || Date.now())) / 1000); $("#laneMeta").innerHTML = `<span style="color:var(--cyan)">● ${NAMES[lane]} 執行中</span> · ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`; }
+  else $("#laneMeta").textContent = st === "done" ? `${NAMES[lane]} 已完成` : "待命";
+  const tk = laneTokens[lane];
+  $("#tokenMeta").textContent = tk ? `${((tk.input || 0) + (tk.output || 0) + (tk.cacheRead || 0)).toLocaleString()} tokens` : "";
+  $$(".tab").forEach((t) => { const s = S.lanes[t.dataset.lane]; t.querySelector(".dot").className = "dot " + (s === "running" ? "run" : s === "done" ? "" : "idle"); });
+  $("#stopBtn").disabled = !Object.values(S.lanes).includes("running");
+}
+setInterval(renderLaneMeta, 1000);
+
+// ═════════ 確認與結果 ═════════
+let pendingMode = "direct";
+function openConfirm(mode) {
+  pendingMode = mode;
+  const items = [...S.selected].map((id) => S.suggestions.get(id)), bytes = sumBytes(items);
+  $("#confirmTitle").textContent = `${mode === "agent" ? "讓 Agent 清理" : "直接清理"} ${items.length} 項（約 ${human(bytes)}）`;
+  $("#confirmDesc").textContent = mode === "agent"
+    ? "Agent 會先確認路徑仍和預期一致、相關的 App 沒有在執行，再透過 VOIDSCAN 逐項執行，然後重新測量，告訴你實際釋放了多少、哪些沒有動到。"
+    : "VOIDSCAN 會立即執行下面這些指令，內容與複核時完全一致。執行前會再核對一次路徑沒有變。";
+  $("#confirmCmds").innerHTML = items.map((s) => `<code>${esc(s.command)}</code>`).join("");
+  show("#confirmVeil");
+}
+$("#confirmGo").addEventListener("click", async () => {
+  hide("#confirmVeil");
+  const ids = [...S.selected];
+  S.selected.clear(); renderPanel(); renderMap();
+  if (pendingMode === "agent") { setTab("clean"); openDrawer(true); }
+  const r = await fetch("/api/clean", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids, mode: pendingMode }) });
+  if (!r.ok) toast((await r.json()).error || "無法開始清理");
+});
+function countUp(el, to, digits) {
+  const t0 = performance.now(), dur = 1300;
+  const step = (t) => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = (to * e).toFixed(digits); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function showResult(res) {
+  const big = res.freed >= GB;
+  $("#freedBig").innerHTML = `<span id="fb">0</span><small> ${big ? "G" : "M"}</small>`;
+  show("#resultVeil");
+  countUp($("#fb"), Math.max(res.freed, 0) / (big ? GB : 1024 ** 2), big ? 2 : 0);
+  const total = S.disk?.total || 1;
+  $("#compare").innerHTML = `
+    <div><div class="k2"><span>清理前可用</span><span>${human(res.before)}</span></div><div class="bar2"><i style="background:linear-gradient(90deg,#ff5f7a,#ffc455)" data-w="${(res.before / total) * 100}"></i></div></div>
+    <div><div class="k2"><span>清理後可用</span><span>${human(res.after)}</span></div><div class="bar2"><i style="background:linear-gradient(90deg,#3dffb4,#3fe6ff);box-shadow:0 0 16px rgba(61,255,180,.6)" data-w="${(res.after / total) * 100}"></i></div></div>`;
+  setTimeout(() => $$("#compare i").forEach((i) => i.style.width = i.dataset.w + "%"), 80);
+  $("#resultList").innerHTML = [...res.done.map((id) => [id, true]), ...res.skipped.map((id) => [id, false])].map(([id, ok]) => {
+    const s = S.suggestions.get(id); if (!s) return "";
+    return `<div class="drow"><span>${ok ? "✓" : "–"} ${esc(s.title)}　${ok ? "" : esc(s.result || "沒有動到")}</span><b>${ok ? human(s.freed || s.bytes) : ""}</b></div>`;
+  }).join("");
+}
+function show(sel) { $(sel).classList.add("show"); }
+function hide(sel) { $(sel).classList.remove("show"); }
+$$(".veil").forEach((v) => v.addEventListener("click", (e) => { if (e.target === v || e.target.hasAttribute("data-close")) hide("#" + v.id); }));
+let toastTimer;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 4200); }
+
+// ═════════ 即時事件 ═════════
+function journal(m, replay) {
+  switch (m.type) {
+    case "reset":
+      for (const lane of ["scan", "review", "clean"]) { laneLog(lane).innerHTML = ""; termState[lane] = {}; laneTokens[lane] = null; }
+      appendLine("scan", "sys", "<b>▸</b> 開始測量磁碟");
+      break;
+    case "measuring": S.measuringLabel = m.label; appendLine("scan", "sys", `<b>規則</b> 測量 ${esc(m.label)}⋯`); if (!replay) { S.measuring.add(m.id); renderMap(); } break;
+    case "category": appendLine("scan", "sys", `<b>規則</b> ${esc(m.category.label)} <span style="color:var(--ink)">${human(m.category.bytes)}</span>`); break;
+    case "found": appendLine("scan", "sys", `<b>${m.source === "rule" ? "規則" : "Agent"}</b> 找到 ${esc(m.title)} · ${human(m.bytes)}`); break;
+    case "rulesDone": appendLine("scan", "sys", `<b>▸</b> 規則找到 ${m.count} 項，先送去複核；掃描 Agent 接著查規則看不到的地方`); break;
+    case "scanDone": appendLine("scan", "sys", `<b>▸</b> 掃描 Agent 另外找到 ${m.added} 項，交給複核 Agent`); break;
+    case "lane":
+      if (m.status === "running") { laneStart[m.lane] = Date.now(); appendLine(m.lane, "sys", `<b>●</b> ${NAMES[m.lane]} 啟動 · ${esc(m.model)} · 唯讀沙盒`); if (!replay) { setTab(m.lane); if (!S.drawerByUser && m.lane !== "review") openDrawer(true); } }
+      else appendLine(m.lane, "sys", `<b>■</b> 完成，用時 ${m.seconds} 秒`);
+      break;
+    case "agent":
+      if (m.k === "text" || m.k === "think") { if (m.text.trim() || termState[m.lane].kind === m.k) streamText(m.lane, m.k, m.text); }
+      else if (m.k === "tool" && m.tool === "ToolSearch") { termState[m.lane].skipNext = true; }
+      else if (m.k === "result" && termState[m.lane].skipNext) { termState[m.lane].skipNext = false; }
+      else if (m.k === "tool") { appendLine(m.lane, "tool", `${m.tool ? `<span class="tt">${esc(m.tool)}</span>` : ""}${esc(m.text)}${m.desc ? `<span class="d">${esc(m.desc)}</span>` : ""}`); if (!replay && m.desc) { S.activity = m.desc; renderPanel(); } }
+      else if (m.k === "result") appendLine(m.lane, "res" + (m.ok ? "" : " err"), esc(m.text || "（沒有輸出）"));
+      else if (m.k === "guard") appendLine(m.lane, "guard", "⚠ " + esc(m.text));
+      break;
+  }
+}
+const JOURNAL = new Set(["reset", "measuring", "category", "found", "rulesDone", "scanDone", "lane", "agent"]);
+function connect() {
+  const es = new EventSource("/api/events");
+  es.onopen = () => { $("#connDot").className = "dot"; $("#connText").textContent = "已連線"; };
+  es.onerror = () => { $("#connDot").className = "dot idle"; $("#connText").textContent = "重新連線中"; };
+  es.onmessage = (ev) => {
+    const m = JSON.parse(ev.data);
+    if (JOURNAL.has(m.type)) journal(m, false);
+    switch (m.type) {
+      case "snapshot": {
+        const st = m.state;
+        Object.assign(S, { disk: st.disk, categories: st.categories, phase: st.phase, lanes: st.lanes, lastClean: st.lastClean, cleaning: st.cleaning });
+        S.suggestions = new Map(st.suggestions.map((s) => [s.id, s]));
+        for (const lane of ["scan", "review", "clean"]) { laneLog(lane).innerHTML = ""; termState[lane] = {}; }
+        for (const j of st.journal || []) journal(j, true);
+        if (!(st.journal || []).length) appendLine("scan", "sys", `等待指令<span class="cursor"></span>`);
+        renderPanel(); renderMap(); renderLaneMeta();
+        break;
+      }
+      case "reset":
+        Object.assign(S, { categories: [], lastClean: null, lanes: {}, activity: "" });
+        S.suggestions.clear(); S.selected.clear(); S.open.clear(); S.layout = new Map(); S.layoutSize = "";
+        renderPanel(); renderMap();
+        break;
+      case "disk": S.disk = m.disk; renderPanel(); break;
+      case "category": S.measuring.delete(m.category.id); S.categories = [...S.categories.filter((c) => c.id !== m.category.id), m.category]; renderMap(); renderPanel(); break;
+      case "categories": S.categories = m.categories; S.measuring.clear(); renderMap(); renderPanel(); break;
+      case "suggestion": S.suggestions.set(m.suggestion.id, m.suggestion); renderPanel(); renderMap(); break;
+      case "phase": S.phase = m.phase; renderPanel(); break;
+      case "cleaning": S.cleaning = m.on; S.cleanStage = m.on ? m.stage : ""; renderPanel(); break;
+      case "lane": S.lanes[m.lane] = m.status; if (m.status === "done") S.activity = ""; renderLaneMeta(); renderPanel(); break;
+      case "usage": laneTokens[m.lane] = m.tokens; renderLaneMeta(); break;
+      case "pipelineDone": toast("掃描與複核完成，勾選想清的項目吧"); break;
+      case "cleanDone": S.lastClean = m.result; renderPanel(); renderMap(); showResult(m.result); break;
+      case "error": toast(m.message); break;
+    }
+  };
+}
+renderPanel();
+connect();
+</script>
+</body>
+</html>
